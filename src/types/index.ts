@@ -40,7 +40,7 @@ export interface LiveStockProduct extends BaseProduct {
 }
 
 // Category 2: Processed Rabbit Meat
-export type StorageState = 'fresh' | 'frozen';
+export type StorageState = 'fresh' | 'frozen' | 'smoked' | 'barbecue' | 'dehydrated';
 export type MeatType = 'whole-dressed' | 'cut-parts';
 
 export interface ProcessedMeatProduct extends BaseProduct {
@@ -53,7 +53,7 @@ export interface ProcessedMeatProduct extends BaseProduct {
 
 // Category 3: Culinary & Event Catering
 export type EventType = 'wedding' | 'burial' | 'graduation' | 'birthday' | 'corporate' | 'other';
-export type CateringItemType = 'bbq-skewers' | 'roasted-whole';
+export type CateringItemType = 'bbq-skewers' | 'roasted-whole' | 'party-platter' | 'buffet-tray';
 
 export interface CateringProduct extends BaseProduct {
   category: 'catering';
@@ -65,7 +65,7 @@ export interface CateringProduct extends BaseProduct {
 }
 
 // Category 4: By-Products & Farm Inputs
-export type ByProductType = 'rabbit-urine' | 'dried-manure' | 'cured-fur';
+export type ByProductType = 'rabbit-urine' | 'dried-manure' | 'cured-fur' | 'bone-meal' | 'compost-tea';
 
 export interface ByProductItem extends BaseProduct {
   category: 'by-products';
@@ -76,7 +76,7 @@ export interface ByProductItem extends BaseProduct {
 }
 
 // Category 5: Equipment & Fabrication
-export type EquipmentType = 'wire-cage' | 'nipple-drinker' | 'feeding-trough';
+export type EquipmentType = 'wire-cage' | 'nipple-drinker' | 'feeding-trough' | 'nesting-box' | 'farm-scale';
 
 export interface EquipmentProduct extends BaseProduct {
   category: 'equipment';

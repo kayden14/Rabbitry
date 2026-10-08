@@ -130,20 +130,23 @@ function ProductDetailContent({ params }: { params: Promise<{ slug: string }> })
             {/* Left: Image */}
             <div>
               <div style={{
-                borderRadius: 'var(--radius-xl)',
+                borderRadius: '16px',
                 overflow: 'hidden',
-                background: 'linear-gradient(135deg,#1a5c2a15,#c9921a15)',
+                background: '#f1f5f9',
                 aspectRatio: '4/3',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '9rem',
+                position: 'relative',
+                border: '1px solid #e2e8f0',
+                boxShadow: 'var(--shadow-md)',
               }}>
-                {product.category === 'live-stock' && '🐇'}
-                {product.category === 'processed-meat' && '🥩'}
-                {product.category === 'catering' && '🍖'}
-                {product.category === 'by-products' && '🌿'}
-                {product.category === 'equipment' && '🏗️'}
+                <img
+                  src={product.images?.[0] || '/images/white-rabbit.jpg'}
+                  alt={product.name}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
               </div>
               <div style={{
                 marginTop: '1rem',

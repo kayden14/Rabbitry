@@ -73,15 +73,19 @@ export const useCartStore = create<CartStore>()(
       getWhatsAppMessage: () => {
         const { items, deliveryState, deliveryCity } = get();
         if (!items.length) return '';
-        const lines = items.map(
-          i => `• ${i.product.name} (Qty: ${i.quantity})`
-        );
+        const lines = items.map((i) => {
+          let spec = '';
+          if ('weightKg' in i.product && (i.product as any).weightKg) {
+            spec = `, Weight: ${(i.product as any).weightKg}kg`;
+          }
+          return `• ${i.product.name} (Qty: ${i.quantity}${spec})`;
+        });
         const location =
           deliveryState && deliveryCity
-            ? `${deliveryCity}, ${deliveryState}`
-            : deliveryState || 'Not specified';
+            ? `${deliveryState} State / ${deliveryCity}`
+            : deliveryState ? `${deliveryState} State` : 'Nigeria';
         return encodeURIComponent(
-          `Hello RABBITRY 🐇,\n\nI want to place an order:\n\n${lines.join('\n')}\n\nDelivery Location: ${location}\n\nPlease confirm availability and delivery fee.\n\nThank you!`
+          `Hello RABBITRY,\n\nI want to order:\n${lines.join('\n')}\n\nDelivery Destination: ${location}.\n\nPlease confirm availability and park transit freight to my location.\n\nThank you!`
         );
       },
     }),

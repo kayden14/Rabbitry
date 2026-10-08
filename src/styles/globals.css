@@ -475,3 +475,16 @@ h1, h2, h3, h4, h5, h6 {
   .section-sm { padding: 2rem 0; }
 }
 @media (min-width: 769px) { .show-mobile-only { display: none !important; } }
+
+/* ─── Enterprise Micro-Interactions ──────────────────────────── */
+.card-hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.04) !important;
+  border-color: #cbd5e1 !important;
+}
+.card-hover-lift:hover .product-image-zoom {
+  transform: scale(1.05);
+}

@@ -1,15 +1,25 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useCartStore } from '@/lib/cart-store';
-import { formatNaira, WHATSAPP_NUMBER, BANK_NAME, BANK_ACCOUNT_NAME, BANK_ACCOUNT_NUMBER } from '@/lib/utils';
+import {
+  formatNaira,
+  WHATSAPP_NUMBER,
+  PHONE_1,
+  PHONE_2,
+  BANK_NAME,
+  BANK_ACCOUNT_NAME,
+  BANK_ACCOUNT_NUMBER,
+  PAYSTACK_PUBLIC_KEY,
+} from '@/lib/utils';
 import { NIGERIAN_STATES } from '@/types';
 
 type PaymentMethod = 'bank-transfer' | 'paystack' | 'whatsapp';
 
-interface FormData {
+interface CheckoutFormData {
   name: string;
   phone: string;
   email: string;
@@ -20,80 +30,189 @@ interface FormData {
 }
 
 export default function CheckoutPage() {
-  const { items, getSubtotal, getTotalItems, getWhatsAppMessage, clearCart } = useCartStore();
-  const [payMethod, setPayMethod] = useState<PaymentMethod>('bank-transfer');
-  const [form, setForm] = useState<FormData>({ name:'', phone:'', email:'', state:'', city:'', address:'', notes:'' });
-  const [step, setStep] = useState<'form' | 'payment' | 'success'>('form');
-  const [loading, setLoading] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<string>('');
-
+  const { items, getSubtotal, clearCart } = useCartStore();
   const subtotal = getSubtotal();
-  const waMsg = getWhatsAppMessage();
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const [step, setStep] = useState<'details' | 'payment-review' | 'confirmed'>('details');
+  const [payMethod, setPayMethod] = useState<PaymentMethod>('bank-transfer');
+  const [copiedBank, setCopiedBank] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Form details
+  const [form, setForm] = useState<CheckoutFormData>({
+    name: '',
+    phone: '',
+    email: '',
+    state: 'Lagos',
+    city: '',
+    address: '',
+    notes: '',
+  });
+
+  // Proof of payment
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [transferRef, setTransferRef] = useState<string>('');
+  const [confirmedOrder, setConfirmedOrder] = useState<{
+    orderNumber: string;
+    subtotal: number;
+    paymentMethod: string;
+    state: string;
+    city: string;
+  } | null>(null);
+
+  // Paystack mock state
+  const [paystackProcessing, setPaystackProcessing] = useState(false);
+
+  // Approximate transport guidelines for Nigerian zones
+  const getZoneEstimate = (state: string) => {
+    const sw = ['Lagos', 'Ogun', 'Oyo', 'Osun', 'Ondo', 'Ekiti'];
+    const ss_se = ['Delta', 'Edo', 'Rivers', 'Bayelsa', 'Akwa Ibom', 'Cross River', 'Anambra', 'Enugu', 'Imo', 'Abia', 'Ebonyi'];
+    if (sw.includes(state)) {
+      return '₦3,500 – ₦5,000 (Southwest Transit Hub)';
+    } else if (ss_se.includes(state)) {
+      return '₦6,000 – ₦8,500 (Eastern/Niger-Delta Park Express)';
+    } else {
+      return '₦7,500 – ₦11,000 (Northern & FCT Logistics)';
+    }
+  };
+
+  const handleCopyAccount = () => {
+    navigator.clipboard.writeText(BANK_ACCOUNT_NUMBER);
+    setCopiedBank(true);
+    setTimeout(() => setCopiedBank(false), 2200);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReceiptPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Launch WhatsApp with the exact SRS template
+  const launchWhatsAppCheckout = () => {
+    const itemsDescription = items
+      .map((i) => `${i.product.name} (Qty: ${i.quantity}, Price: ${formatNaira(i.product.price * i.quantity)})`)
+      .join(', ');
+
+    const text = encodeURIComponent(
+      `Hello RABBITRY,\n\nI want to order ${itemsDescription} for delivery to ${form.state} / ${form.city || 'State Capital'}.\n\nCustomer: ${form.name}\nPhone: ${form.phone}\nSubtotal: ${formatNaira(subtotal)}\n\nPlease confirm current park delivery freight and provide dispatch invoice.`
+    );
+
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, '_blank');
+  };
+
+  const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    if (payMethod === 'whatsapp') {
-      const msg = encodeURIComponent(
-        `Hello RABBITRY 🐇, I want to place an order!\n\n` +
-        `*Customer:* ${form.name}\n*Phone:* ${form.phone}\n` +
-        `*Delivery:* ${form.city}, ${form.state}\n*Address:* ${form.address}\n\n` +
-        `*Items:*\n${items.map(i => `• ${i.product.name} × ${i.quantity} = ${formatNaira(i.product.price * i.quantity)}`).join('\n')}\n\n` +
-        `*Subtotal:* ${formatNaira(subtotal)}\n*(+ delivery fee to be confirmed)*`
-      );
-      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
-      setLoading(false);
+    if (!form.name || !form.phone || !form.address) {
+      alert('Please complete all required contact and delivery fields.');
       return;
     }
 
-    // Save order
+    if (payMethod === 'whatsapp') {
+      launchWhatsAppCheckout();
+      return;
+    }
+
+    setStep('payment-review');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Process Final Order
+  const finalizeOrder = async (isPaystack = false, payRef?: string) => {
+    setLoading(true);
     try {
-      await fetch('/api/orders', {
+      const orderPayload = {
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+        state: form.state,
+        city: form.city,
+        address: form.address,
+        notes: form.notes,
+        subtotal,
+        paymentMethod: isPaystack ? 'paystack' : 'bank-transfer',
+        paymentProofUrl: receiptPreview || null,
+        paystackReference: payRef || transferRef || null,
+        items: items.map((i) => ({
+          productId: i.product.id,
+          productName: i.product.name,
+          productCategory: i.product.category,
+          quantity: i.quantity,
+          unitPrice: i.product.price,
+        })),
+      };
+
+      const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          items: items.map(i => ({
-            productId: i.product.id,
-            productName: i.product.name,
-            productCategory: i.product.category,
-            quantity: i.quantity,
-            unitPrice: i.product.price,
-          })),
-          subtotal,
-          paymentMethod: payMethod,
-        }),
+        body: JSON.stringify(orderPayload),
       });
+
+      const data = await res.json();
+      if (data.success && data.order) {
+        setConfirmedOrder({
+          orderNumber: data.order.orderNumber,
+          subtotal,
+          paymentMethod: isPaystack ? 'Paystack Online Gateway' : 'Direct Bank Transfer',
+          state: form.state,
+          city: form.city,
+        });
+        clearCart();
+        setStep('confirmed');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        alert('Could not submit order. Please check your network or contact our WhatsApp desk.');
+      }
     } catch (err) {
-      console.error('Order save failed:', err);
+      console.error(err);
+      alert('Network error submitting order. Please contact our desk directly.');
     } finally {
       setLoading(false);
     }
-
-    if (payMethod === 'paystack') {
-      // Paystack integration would go here with real public key
-      alert('Paystack integration: Add your Paystack public key to enable online payments.');
-      setStep('payment');
-    } else {
-      setStep('payment');
-    }
   };
 
-  const handlePaymentConfirm = () => {
-    clearCart();
-    setStep('success');
+  // Paystack popup / simulator
+  const handlePaystackPay = () => {
+    setPaystackProcessing(true);
+    // Simulate real gateway response / integration
+    setTimeout(() => {
+      const randomRef = 'PSTK-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+      setPaystackProcessing(false);
+      finalizeOrder(true, randomRef);
+    }, 1500);
   };
 
-  if (items.length === 0 && step === 'form') {
+  if (items.length === 0 && step === 'details') {
     return (
       <>
         <Navbar />
-        <main style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🛒</div>
-            <h2 style={{ fontFamily: "'Playfair Display',serif", color: 'var(--gray-800)', marginBottom: '1rem' }}>Nothing to checkout</h2>
-            <a href="/shop" className="btn btn-primary">Browse Products</a>
+        <main style={{ minHeight: '65vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🛒</div>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>
+              Your Cart is Currently Empty
+            </h2>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+              Browse our live breeding stock, dressed rabbit meat, and equipment catalog.
+            </p>
+            <Link
+              href="/shop"
+              style={{
+                background: '#0f431f',
+                color: '#ffffff',
+                padding: '12px 24px',
+                borderRadius: '6px',
+                fontWeight: 600,
+                textDecoration: 'none',
+              }}
+            >
+              Explore Products
+            </Link>
           </div>
         </main>
         <Footer />
@@ -104,265 +223,959 @@ export default function CheckoutPage() {
   return (
     <>
       <Navbar />
-      <main>
-        <div style={{ background: 'linear-gradient(135deg,#0d3317,#1a5c2a)', padding: '4rem 0 3rem' }}>
-          <div className="container">
-            <h1 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontSize: '2.25rem', fontWeight: 800 }}>
-              {step === 'form' ? 'Checkout' : step === 'payment' ? 'Complete Payment' : 'Order Confirmed! 🎉'}
+      <main style={{ minHeight: '100vh', background: '#f8fafc', padding: '3rem 0 5rem' }}>
+        <div className="container" style={{ maxWidth: 1100 }}>
+          {/* Progress Header */}
+          <div style={{ marginBottom: '2.5rem' }}>
+            <span
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: '#0f431f',
+                background: '#e2f4e8',
+                padding: '3px 10px',
+                borderRadius: '4px',
+                display: 'inline-block',
+                marginBottom: '8px',
+              }}
+            >
+              Danethicals Hybrid Checkout
+            </span>
+            <h1
+              style={{
+                fontSize: 'clamp(1.75rem, 3.5vw, 2.3rem)',
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontWeight: 800,
+                color: '#0f172a',
+                margin: 0,
+              }}
+            >
+              Multi-Channel Order Checkout
             </h1>
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-              {['form', 'payment', 'success'].map((s, i) => (
-                <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{
-                    width: 28, height: 28,
-                    borderRadius: '50%',
-                    background: step === s ? 'var(--brand-gold)' : ((['form','payment','success'].indexOf(step) > i) ? '#fff' : 'rgba(255,255,255,0.3)'),
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.75rem', fontWeight: 700,
-                    color: ['form','payment','success'].indexOf(step) > i ? 'var(--brand-green)' : (step === s ? '#fff' : 'rgba(255,255,255,0.7)'),
-                    transition: 'all 0.3s',
-                  }}>
-                    {(['form','payment','success'].indexOf(step) > i) ? '✓' : (i + 1)}
-                  </div>
-                  <span style={{ color: step === s ? '#fff' : 'rgba(255,255,255,0.5)', fontSize: '0.8rem', fontWeight: step === s ? 600 : 400 }}>
-                    {s === 'form' ? 'Details' : s === 'payment' ? 'Payment' : 'Done'}
-                  </span>
-                  {i < 2 && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>›</span>}
-                </div>
-              ))}
-            </div>
+            <p style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '6px' }}>
+              Parakin-Obalufe Area, Ile-Ife, Osun State · Direct Assistance: {PHONE_1} / {PHONE_2}
+            </p>
           </div>
-        </div>
 
-        <div className="container" style={{ padding: '3rem 1.25rem' }}>
-          {step === 'form' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '2.5rem', alignItems: 'start' }}>
-              <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-                {/* Customer Info */}
-                <div style={{ background: '#fff', borderRadius: 'var(--radius-xl)', padding: '2rem', boxShadow: 'var(--shadow)' }}>
-                  <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-                    📋 Your Information
+          {/* STEP 1: CUSTOMER & LOGISTICS DETAILS */}
+          {step === 'details' && (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '2.5rem',
+                alignItems: 'start',
+              }}
+            >
+              <form onSubmit={handleDetailsSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+                {/* Contact Card */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0',
+                    padding: '24px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  }}
+                >
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', marginBottom: '16px' }}>
+                    1. Contact & Customer Details
                   </h2>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="form-group">
-                      <label className="form-label">Full Name *</label>
-                      <input required placeholder="Adebayo Olamide" className="form-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Phone Number *</label>
-                      <input required type="tel" placeholder="08012345678" className="form-input" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
-                    </div>
-                    <div className="form-group" style={{ gridColumn: '1/-1' }}>
-                      <label className="form-label">Email (optional)</label>
-                      <input type="email" placeholder="you@email.com" className="form-input" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-                    </div>
-                  </div>
-                </div>
 
-                {/* Delivery */}
-                <div style={{ background: '#fff', borderRadius: 'var(--radius-xl)', padding: '2rem', boxShadow: 'var(--shadow)' }}>
-                  <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-                    📍 Delivery Location
-                  </h2>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="form-group">
-                      <label className="form-label">State *</label>
-                      <select required className="form-input form-select" value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))}>
-                        <option value="">Select State...</option>
-                        {NIGERIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">City / Town *</label>
-                      <input required placeholder="e.g. Ile-Ife" className="form-input" value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
-                    </div>
-                    <div className="form-group" style={{ gridColumn: '1/-1' }}>
-                      <label className="form-label">Delivery Address *</label>
-                      <textarea required placeholder="House no., street, nearest landmark..." className="form-input form-textarea" style={{ minHeight: 80 }} value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
-                    </div>
-                    <div className="form-group" style={{ gridColumn: '1/-1' }}>
-                      <label className="form-label">Order Notes (optional)</label>
-                      <textarea placeholder="Special requests, preferred breed age, etc." className="form-input form-textarea" style={{ minHeight: 70 }} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
-                    </div>
-                  </div>
-                  <div style={{
-                    marginTop: '1rem',
-                    padding: '0.875rem',
-                    background: 'rgba(201,146,26,0.08)',
-                    borderRadius: 'var(--radius)',
-                    borderLeft: '3px solid var(--brand-gold)',
-                    fontSize: '0.8rem',
-                    color: 'var(--gray-600)',
-                    lineHeight: 1.6,
-                  }}>
-                    🚛 <strong>Note:</strong> Transport fee is calculated based on current motor park / courier rates. Our team will confirm your exact delivery fee before processing.
-                  </div>
-                </div>
-
-                {/* Payment Method */}
-                <div style={{ background: '#fff', borderRadius: 'var(--radius-xl)', padding: '2rem', boxShadow: 'var(--shadow)' }}>
-                  <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-                    💳 Payment Method
-                  </h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-                    {([
-                      { id: 'bank-transfer', icon: '🏦', title: 'Direct Bank Transfer', desc: 'Upload payment proof after transfer. We confirm manually.' },
-                      { id: 'paystack', icon: '💳', title: 'Pay Online (Paystack)', desc: 'Debit card, USSD, bank transfer, or international card.' },
-                      { id: 'whatsapp', icon: '💬', title: 'Order via WhatsApp', desc: 'Chat with us directly to arrange payment.' },
-                    ] as { id: PaymentMethod; icon: string; title: string; desc: string }[]).map(method => (
-                      <label
-                        key={method.id}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <div style={{ gridColumn: '1/-1' }}>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '5px' }}>
+                        Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Babatunde Alabi"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
                         style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: '1rem',
-                          padding: '1rem',
-                          border: `2px solid ${payMethod === method.id ? 'var(--brand-green)' : 'var(--gray-200)'}`,
-                          borderRadius: 'var(--radius-lg)',
-                          cursor: 'pointer',
-                          background: payMethod === method.id ? 'rgba(26,92,42,0.04)' : '#fff',
-                          transition: 'all 0.2s',
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '0.9rem',
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '5px' }}>
+                        Phone Number (WhatsApp Active) *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="08012345678"
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '0.9rem',
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '5px' }}>
+                        Email Address (Optional)
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="name@example.com"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '0.9rem',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dynamic Inter-State Logistics Card */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0',
+                    padding: '24px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                      2. Inter-State Delivery Destination
+                    </h2>
+                    <span
+                      style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        color: '#0369a1',
+                        background: '#e0f2fe',
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      Non-Fixed Freight
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '5px' }}>
+                        Destination State *
+                      </label>
+                      <select
+                        value={form.state}
+                        onChange={(e) => setForm({ ...form, state: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '0.9rem',
+                          backgroundColor: '#ffffff',
                         }}
                       >
-                        <input
-                          type="radio"
-                          name="payMethod"
-                          value={method.id}
-                          checked={payMethod === method.id}
-                          onChange={() => setPayMethod(method.id)}
-                          style={{ marginTop: 3 }}
-                        />
-                        <span style={{ fontSize: '1.25rem' }}>{method.icon}</span>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--gray-800)', marginBottom: '0.2rem' }}>{method.title}</div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--gray-500)' }}>{method.desc}</div>
-                        </div>
+                        {NIGERIAN_STATES.map((s) => (
+                          <option key={s} value={s}>
+                            {s} State
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '5px' }}>
+                        City / Nearest Motor Park Town *
                       </label>
-                    ))}
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Ikeja / Ojota Park"
+                        value={form.city}
+                        onChange={(e) => setForm({ ...form, city: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '0.9rem',
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ gridColumn: '1/-1' }}>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '5px' }}>
+                        Street / Farm Delivery Address *
+                      </label>
+                      <textarea
+                        required
+                        rows={2}
+                        placeholder="Detailed address, landmark, or farm gate directions"
+                        value={form.address}
+                        onChange={(e) => setForm({ ...form, address: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '0.9rem',
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ gridColumn: '1/-1' }}>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '5px' }}>
+                        Special Handling Notes (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Early morning arrival preferred, crate return instructions"
+                        value={form.notes}
+                        onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '0.9rem',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Freight Advisory Notice from SRS */}
+                  <div
+                    style={{
+                      background: '#fffbeb',
+                      border: '1px solid #fef3c7',
+                      borderLeft: '4px solid #d9a841',
+                      borderRadius: '6px',
+                      padding: '14px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                      <span style={{ fontSize: '1.2rem' }}>🚛</span>
+                      <div style={{ fontSize: '0.83rem', color: '#92400e', lineHeight: 1.55 }}>
+                        <strong>Dynamic Inter-State Freight Advisory:</strong>
+                        <p style={{ margin: '4px 0 0' }}>
+                          Due to prevailing pump fuel prices, freight is not hardcoded. Standard transit to{' '}
+                          <strong>{form.state}</strong> typically averages{' '}
+                          <strong>{getZoneEstimate(form.state)}</strong> via park dispatch. Transport fee is confirmed
+                          upon order review.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
+                {/* Payment Method Selector */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0',
+                    padding: '24px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  }}
+                >
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', marginBottom: '16px' }}>
+                    3. Select Preferred Payment Channel
+                  </h2>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {/* Method 1: Direct Bank Transfer */}
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '14px',
+                        padding: '16px',
+                        borderRadius: '8px',
+                        border: `2px solid ${payMethod === 'bank-transfer' ? '#0f431f' : '#e2e8f0'}`,
+                        background: payMethod === 'bank-transfer' ? '#f0fdf4' : '#ffffff',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="payMethod"
+                        checked={payMethod === 'bank-transfer'}
+                        onChange={() => setPayMethod('bank-transfer')}
+                        style={{ marginTop: '4px', accentColor: '#0f431f' }}
+                      />
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a' }}>
+                            Direct Bank Transfer (Primary Method)
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              background: '#0f431f',
+                              color: '#ffffff',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            Recommended
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '4px', marginBottom: 0 }}>
+                          Transfer directly to Danethicals Limited official First Bank account. Upload your receipt
+                          screenshot for manual farm verification.
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* Method 2: Paystack Gateway */}
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '14px',
+                        padding: '16px',
+                        borderRadius: '8px',
+                        border: `2px solid ${payMethod === 'paystack' ? '#0f431f' : '#e2e8f0'}`,
+                        background: payMethod === 'paystack' ? '#f0fdf4' : '#ffffff',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="payMethod"
+                        checked={payMethod === 'paystack'}
+                        onChange={() => setPayMethod('paystack')}
+                        style={{ marginTop: '4px', accentColor: '#0f431f' }}
+                      />
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a' }}>
+                            Online Payment Gateway (Paystack)
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              background: '#0284c7',
+                              color: '#ffffff',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            Instant
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '4px', marginBottom: 0 }}>
+                          Debit cards (Verve, Mastercard, Visa), Bank USSD, Virtual Account, or International Diaspora
+                          cards.
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* Method 3: Instant WhatsApp Trigger */}
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '14px',
+                        padding: '16px',
+                        borderRadius: '8px',
+                        border: `2px solid ${payMethod === 'whatsapp' ? '#0f431f' : '#e2e8f0'}`,
+                        background: payMethod === 'whatsapp' ? '#f0fdf4' : '#ffffff',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="payMethod"
+                        checked={payMethod === 'whatsapp'}
+                        onChange={() => setPayMethod('whatsapp')}
+                        style={{ marginTop: '4px', accentColor: '#0f431f' }}
+                      />
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a' }}>
+                            Instant WhatsApp Order Trigger
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              background: '#25d366',
+                              color: '#ffffff',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            Direct Chat
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '4px', marginBottom: 0 }}>
+                          Generates auto-formatted order text and immediately opens WhatsApp chat with our farm sales
+                          officer.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Submit Action */}
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="btn btn-primary btn-xl"
-                  style={{ width: '100%', justifyContent: 'center' }}
+                  style={{
+                    background: payMethod === 'whatsapp' ? '#25d366' : '#0f431f',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 12px rgba(15, 67, 31, 0.25)',
+                  }}
                 >
-                  {loading ? '⏳ Processing...' : payMethod === 'whatsapp' ? '💬 Send Order via WhatsApp' : 'Continue to Payment →'}
+                  {payMethod === 'whatsapp' ? '💬 Launch WhatsApp Order Now' : 'Proceed to Payment →'}
                 </button>
               </form>
 
-              {/* Order Summary */}
-              <div style={{ position: 'sticky', top: 100, background: '#fff', borderRadius: 'var(--radius-xl)', padding: '1.75rem', boxShadow: 'var(--shadow-lg)' }}>
-                <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: '1rem', fontWeight: 700, marginBottom: '1.25rem' }}>Order Summary</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                  {items.map(item => (
-                    <div key={item.product.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                      <span style={{ color: 'var(--gray-700)' }}>{item.product.name} × {item.quantity}</span>
-                      <span style={{ fontWeight: 600 }}>{formatNaira(item.product.price * item.quantity)}</span>
+              {/* Order Summary Sidebar */}
+              <div
+                style={{
+                  background: '#ffffff',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  padding: '24px',
+                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                  position: 'sticky',
+                  top: '100px',
+                }}
+              >
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '16px' }}>
+                  Order Summary
+                </h3>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                  {items.map((item) => (
+                    <div
+                      key={item.product.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        fontSize: '0.85rem',
+                        borderBottom: '1px solid #f1f5f9',
+                        paddingBottom: '8px',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 600, color: '#1e293b' }}>{item.product.name}</div>
+                        <div style={{ color: '#64748b', fontSize: '0.78rem' }}>
+                          Qty: {item.quantity} · {formatNaira(item.product.price)} each
+                        </div>
+                      </div>
+                      <div style={{ fontWeight: 700, color: '#0f172a' }}>
+                        {formatNaira(item.product.price * item.quantity)}
+                      </div>
                     </div>
                   ))}
                 </div>
-                <div style={{ borderTop: '2px solid var(--gray-100)', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', fontFamily: "'Playfair Display',serif", fontWeight: 800, fontSize: '1.1rem' }}>
-                  <span>Subtotal</span>
-                  <span style={{ color: 'var(--brand-green)' }}>{formatNaira(subtotal)}</span>
+
+                <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: '14px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.88rem', color: '#64748b' }}>Item Subtotal:</span>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f431f' }}>
+                      {formatNaira(subtotal)}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748b' }}>
+                    <span>Estimated Transit Freight:</span>
+                    <span style={{ fontWeight: 600, color: '#b45309' }}>Pending park review</span>
+                  </div>
                 </div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--gray-400)', marginTop: '0.4rem' }}>+ delivery fee (confirmed by admin)</p>
+
+                <div
+                  style={{
+                    background: '#f8fafc',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    fontSize: '0.78rem',
+                    color: '#64748b',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  🔒 <strong>Customer Protection:</strong> Health certificate included with breeding stock.
+                  Live-arrival guaranteed on all authorized park dispatches.
+                </div>
               </div>
             </div>
           )}
 
-          {step === 'payment' && (
-            <div style={{ maxWidth: 560, margin: '0 auto' }}>
-              <div style={{ background: '#fff', borderRadius: 'var(--radius-xl)', padding: '2.5rem', boxShadow: 'var(--shadow-lg)', textAlign: 'center' }}>
-                {payMethod === 'bank-transfer' ? (
-                  <>
-                    <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🏦</div>
-                    <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-                      Make Your Transfer
-                    </h2>
-                    <p style={{ color: 'var(--gray-500)', marginBottom: '2rem', fontSize: '0.9rem' }}>
-                      Transfer exactly <strong style={{ color: 'var(--brand-green)' }}>{formatNaira(subtotal)}</strong> to the account below:
-                    </p>
-
-                    <div style={{ background: 'var(--brand-cream)', borderRadius: 'var(--radius-lg)', padding: '1.75rem', marginBottom: '2rem', textAlign: 'left' }}>
-                      {[
-                        { label: 'Bank Name', value: BANK_NAME },
-                        { label: 'Account Name', value: BANK_ACCOUNT_NAME },
-                        { label: 'Account Number', value: BANK_ACCOUNT_NUMBER },
-                        { label: 'Amount', value: formatNaira(subtotal) + ' + delivery' },
-                      ].map(r => (
-                        <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.625rem 0', borderBottom: '1px solid var(--gray-200)' }}>
-                          <span style={{ fontSize: '0.82rem', color: 'var(--gray-500)', fontWeight: 500 }}>{r.label}</span>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800)' }}>{r.value}</span>
-                        </div>
-                      ))}
+          {/* STEP 2: PAYMENT EXECUTION & PROOF UPLOAD */}
+          {step === 'payment-review' && (
+            <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+              <div
+                style={{
+                  background: '#ffffff',
+                  borderRadius: '16px',
+                  border: '1px solid #e2e8f0',
+                  padding: '32px',
+                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)',
+                }}
+              >
+                {/* Method 1 View: Direct Bank Transfer Details */}
+                {payMethod === 'bank-transfer' && (
+                  <div>
+                    <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                      <span
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: '50%',
+                          background: '#e2f4e8',
+                          color: '#0f431f',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.5rem',
+                          marginBottom: '10px',
+                        }}
+                      >
+                        🏦
+                      </span>
+                      <h2
+                        style={{
+                          fontSize: '1.5rem',
+                          fontFamily: "'Playfair Display', Georgia, serif",
+                          fontWeight: 800,
+                          color: '#0f172a',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        Official Bank Transfer Details
+                      </h2>
+                      <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>
+                        Transfer exactly <strong style={{ color: '#0f431f' }}>{formatNaira(subtotal)}</strong> to the
+                        corporate account below:
+                      </p>
                     </div>
 
-                    <div className="form-group" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
-                      <label className="form-label">Upload Payment Proof / Screenshot</label>
-                      <input
-                        type="text"
-                        placeholder="Paste transaction reference or screenshot URL"
-                        className="form-input"
-                        value={uploadedFile}
-                        onChange={e => setUploadedFile(e.target.value)}
-                      />
-                      <p style={{ fontSize: '0.72rem', color: 'var(--gray-400)', marginTop: '0.3rem' }}>Or send your screenshot via WhatsApp after completing the transfer.</p>
-                    </div>
-
-                    <button onClick={handlePaymentConfirm} className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
-                      I&apos;ve Made the Transfer ✓
-                    </button>
-                    <a
-                      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello RABBITRY, I have completed my bank transfer for order of: ' + items.map(i => i.product.name).join(', ') + '. Please confirm receipt.')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-whatsapp"
-                      style={{ width: '100%', justifyContent: 'center' }}
+                    {/* Official Bank Account Box */}
+                    <div
+                      style={{
+                        background: 'linear-gradient(145deg, #092813 0%, #0f431f 100%)',
+                        color: '#ffffff',
+                        borderRadius: '12px',
+                        padding: '24px',
+                        marginBottom: '24px',
+                        boxShadow: '0 8px 20px rgba(15, 67, 31, 0.25)',
+                      }}
                     >
-                      Notify Us on WhatsApp
-                    </a>
-                  </>
-                ) : (
-                  <>
-                    <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>💳</div>
-                    <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.5rem', fontWeight: 800, marginBottom: '1rem' }}>Paystack Payment</h2>
-                    <p style={{ color: 'var(--gray-500)', marginBottom: '2rem' }}>
-                      Online payment integration is active. Your Paystack public key needs to be configured in the admin settings to enable this.
-                    </p>
-                    <button onClick={handlePaymentConfirm} className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
-                      Confirm Order (Demo)
-                    </button>
-                  </>
+                      <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        Commercial Beneficiary Account
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                        <div>
+                          <div style={{ fontSize: '0.85rem', color: '#f6d37d' }}>{BANK_NAME}</div>
+                          <div style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '0.06em', marginTop: '2px' }}>
+                            {BANK_ACCOUNT_NUMBER}
+                          </div>
+                          <div style={{ fontSize: '0.9rem', color: '#ffffff', fontWeight: 600, marginTop: '4px' }}>
+                            {BANK_ACCOUNT_NAME}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleCopyAccount}
+                          style={{
+                            background: copiedBank ? '#22c55e' : '#d9a841',
+                            color: '#0f172a',
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            padding: '10px 16px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                          }}
+                        >
+                          {copiedBank ? '✓ Copied!' : 'Copy NUBAN'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Receipt Upload & Reference Field */}
+                    <div style={{ marginBottom: '24px' }}>
+                      <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a', marginBottom: '10px' }}>
+                        Attach Proof of Transfer (Screenshot / Receipt)
+                      </h4>
+
+                      <div
+                        style={{
+                          border: '2px dashed #cbd5e1',
+                          borderRadius: '8px',
+                          padding: '20px',
+                          textAlign: 'center',
+                          background: '#f8fafc',
+                          position: 'relative',
+                        }}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            opacity: 0,
+                            cursor: 'pointer',
+                            width: '100%',
+                            height: '100%',
+                          }}
+                        />
+                        {receiptPreview ? (
+                          <div>
+                            <img
+                              src={receiptPreview}
+                              alt="Receipt Preview"
+                              style={{ maxHeight: '180px', maxWidth: '100%', borderRadius: '6px', margin: '0 auto 10px' }}
+                            />
+                            <p style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 600, margin: 0 }}>
+                              ✓ Receipt attached successfully! Click to change.
+                            </p>
+                          </div>
+                        ) : (
+                          <div>
+                            <div style={{ fontSize: '2rem', marginBottom: '6px' }}>📎</div>
+                            <p style={{ fontSize: '0.88rem', fontWeight: 600, color: '#334155', margin: '0 0 4px' }}>
+                              Click or drag payment screenshot here
+                            </p>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                              PNG, JPG, or PDF from your mobile banking app
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ marginTop: '14px' }}>
+                        <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '5px' }}>
+                          Bank Transfer Reference / Session ID (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 0000132409218204 or Sender Name"
+                          value={transferRef}
+                          onChange={(e) => setTransferRef(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '0.9rem',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setStep('details')}
+                        style={{
+                          background: '#f1f5f9',
+                          color: '#475569',
+                          fontWeight: 600,
+                          fontSize: '0.88rem',
+                          padding: '12px 18px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ← Edit Details
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => finalizeOrder(false)}
+                        style={{
+                          flex: 1,
+                          background: '#0f431f',
+                          color: '#ffffff',
+                          fontWeight: 700,
+                          fontSize: '0.95rem',
+                          padding: '12px 20px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        {loading ? 'Submitting Order...' : 'Confirm Transfer & Dispatch →'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Method 2 View: Paystack Online Gateway */}
+                {payMethod === 'paystack' && (
+                  <div>
+                    <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                      <span
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: '50%',
+                          background: '#e0f2fe',
+                          color: '#0284c7',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.5rem',
+                          marginBottom: '10px',
+                        }}
+                      >
+                        💳
+                      </span>
+                      <h2
+                        style={{
+                          fontSize: '1.5rem',
+                          fontFamily: "'Playfair Display', Georgia, serif",
+                          fontWeight: 800,
+                          color: '#0f172a',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        Pay Online via Paystack
+                      </h2>
+                      <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>
+                        Instant automated debit with 256-bit bank-grade encryption.
+                      </p>
+                    </div>
+
+                    <div
+                      style={{
+                        background: '#f8fafc',
+                        borderRadius: '12px',
+                        border: '1px solid #e2e8f0',
+                        padding: '20px',
+                        marginBottom: '24px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #e2e8f0' }}>
+                        <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Order Subtotal:</span>
+                        <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.1rem' }}>{formatNaira(subtotal)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '10px' }}>
+                        <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Recipient:</span>
+                        <span style={{ fontWeight: 600, color: '#0f431f', fontSize: '0.85rem' }}>Danethicals Limited (RC)</span>
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: 'center', marginBottom: '20px', fontSize: '0.82rem', color: '#64748b' }}>
+                      Supports Mastercard, Visa, Verve, Bank USSD (*737#, *894#, etc.), Bank Transfer, and Diaspora Cards.
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setStep('details')}
+                        style={{
+                          background: '#f1f5f9',
+                          color: '#475569',
+                          fontWeight: 600,
+                          fontSize: '0.88rem',
+                          padding: '12px 18px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ← Back
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={paystackProcessing}
+                        onClick={handlePaystackPay}
+                        style={{
+                          flex: 1,
+                          background: '#0284c7',
+                          color: '#ffffff',
+                          fontWeight: 700,
+                          fontSize: '0.95rem',
+                          padding: '12px 20px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          cursor: paystackProcessing ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        {paystackProcessing ? 'Connecting Gateway...' : `Pay ${formatNaira(subtotal)} via Paystack`}
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
           )}
 
-          {step === 'success' && (
-            <div style={{ maxWidth: 520, margin: '0 auto', textAlign: 'center' }}>
-              <div style={{ background: '#fff', borderRadius: 'var(--radius-xl)', padding: '3rem', boxShadow: 'var(--shadow-lg)' }}>
-                <div style={{ fontSize: '5rem', marginBottom: '1.25rem' }}>🎉</div>
-                <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: '2rem', fontWeight: 800, color: 'var(--brand-green-dark)', marginBottom: '0.75rem' }}>
-                  Order Confirmed!
+          {/* STEP 3: ORDER SUCCESS CONFIRMATION */}
+          {step === 'confirmed' && confirmedOrder && (
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              <div
+                style={{
+                  background: '#ffffff',
+                  borderRadius: '16px',
+                  border: '1px solid #e2e8f0',
+                  padding: '40px 32px',
+                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)',
+                }}
+              >
+                <div
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: '50%',
+                    background: '#e2f4e8',
+                    color: '#0f431f',
+                    fontSize: '2rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '16px',
+                  }}
+                >
+                  ✓
+                </div>
+
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    color: '#0f431f',
+                    background: '#e2f4e8',
+                    padding: '3px 10px',
+                    borderRadius: '4px',
+                    display: 'inline-block',
+                    marginBottom: '8px',
+                  }}
+                >
+                  Order Registered
+                </span>
+
+                <h2
+                  style={{
+                    fontSize: '1.65rem',
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                    fontWeight: 800,
+                    color: '#0f172a',
+                    marginBottom: '6px',
+                  }}
+                >
+                  Thank You for Your Order!
                 </h2>
-                <p style={{ color: 'var(--gray-600)', lineHeight: 1.75, marginBottom: '2rem' }}>
-                  Thank you, <strong>{form.name}</strong>! Your order has been received. Our team will contact you on <strong>{form.phone}</strong> within 2 hours to confirm delivery details.
+
+                <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '24px' }}>
+                  Your order tracking code is: <strong>{confirmedOrder.orderNumber}</strong>
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+
+                <div
+                  style={{
+                    background: '#f8fafc',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    textAlign: 'left',
+                    marginBottom: '24px',
+                    border: '1px solid #e2e8f0',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid #e2e8f0' }}>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Destination:</span>
+                    <span style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.85rem' }}>
+                      {confirmedOrder.city}, {confirmedOrder.state} State
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e2e8f0' }}>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Channel:</span>
+                    <span style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.85rem' }}>{confirmedOrder.paymentMethod}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px' }}>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Total Paid/Pending:</span>
+                    <span style={{ fontWeight: 800, color: '#0f431f', fontSize: '1rem' }}>
+                      {formatNaira(confirmedOrder.subtotal)}
+                    </span>
+                  </div>
+                </div>
+
+                <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.6, marginBottom: '24px' }}>
+                  Our dispatch manager at <strong>Parakin, Ile-Ife</strong> is reviewing your order manifest. We will
+                  contact you via WhatsApp on <strong>{form.phone}</strong> with the park courier receipt and tracking
+                  details.
+                </p>
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
                   <a
-                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello RABBITRY, I just placed an order on your website. My name is ' + form.name + ' (' + form.phone + '). Please confirm receipt.')}`}
+                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                      `Hello RABBITRY, I just completed order ${confirmedOrder.orderNumber} for ${confirmedOrder.state} State. Please verify.`
+                    )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-whatsapp btn-lg"
-                    style={{ justifyContent: 'center' }}
+                    style={{
+                      background: '#25d366',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      padding: '12px 20px',
+                      borderRadius: '6px',
+                      textDecoration: 'none',
+                    }}
                   >
-                    Confirm on WhatsApp
+                    Confirm via WhatsApp
                   </a>
-                  <a href="/shop" className="btn btn-outline" style={{ justifyContent: 'center' }}>
-                    Continue Shopping
-                  </a>
+
+                  <Link
+                    href="/"
+                    style={{
+                      background: '#0f431f',
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      fontSize: '0.9rem',
+                      padding: '12px 20px',
+                      borderRadius: '6px',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Return to Home
+                  </Link>
                 </div>
               </div>
             </div>

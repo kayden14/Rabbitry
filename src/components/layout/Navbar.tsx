@@ -7,16 +7,16 @@ import { WHATSAPP_NUMBER, PHONE_1 } from '@/lib/utils';
 import styles from './Navbar.module.css';
 
 const NAV_LINKS = [
-  { href: '/shop', label: 'Shop', children: [
-    { href: '/shop?cat=live-stock', label: '🐇 Live Stock & Pets' },
-    { href: '/shop?cat=processed-meat', label: '🥩 Processed Meat' },
-    { href: '/shop?cat=catering', label: '🍖 Event Catering' },
-    { href: '/shop?cat=by-products', label: '🌿 Farm Inputs' },
-    { href: '/shop?cat=equipment', label: '🏗️ Equipment' },
+  { href: '/shop', label: 'Store Catalog', children: [
+    { href: '/shop?cat=live-stock', label: 'Live Breeding Stock & Pets' },
+    { href: '/shop?cat=processed-meat', label: 'Processed Rabbit Meat' },
+    { href: '/shop?cat=catering', label: 'Culinary & Event Catering' },
+    { href: '/shop?cat=by-products', label: 'Organic By-Products & Inputs' },
+    { href: '/shop?cat=equipment', label: 'Equipment & Cages' },
   ]},
   { href: '/estimator', label: 'Farm Estimator' },
-  { href: '/delivery-wall', label: 'Delivery Wall' },
-  { href: '/catering', label: 'Catering' },
+  { href: '/catering', label: 'Event Catering' },
+  { href: '/admin', label: 'Admin Desk' },
 ];
 
 export default function Navbar() {

@@ -9,13 +9,13 @@ import { allProducts } from '@/data/products';
 import { ProductCategory } from '@/types';
 import { formatCategoryLabel } from '@/lib/utils';
 
-const CATEGORIES: { id: ProductCategory | 'all'; label: string; icon: string }[] = [
-  { id: 'all', label: 'All Products', icon: '🛍️' },
-  { id: 'live-stock', label: 'Live Stock & Pets', icon: '🐇' },
-  { id: 'processed-meat', label: 'Processed Meat', icon: '🥩' },
-  { id: 'catering', label: 'Event Catering', icon: '🍖' },
-  { id: 'by-products', label: 'Farm Inputs', icon: '🌿' },
-  { id: 'equipment', label: 'Equipment', icon: '🏗️' },
+const CATEGORIES: { id: ProductCategory | 'all'; label: string }[] = [
+  { id: 'all', label: 'All Products' },
+  { id: 'live-stock', label: 'Live Stock & Pets' },
+  { id: 'processed-meat', label: 'Processed Rabbit Meat' },
+  { id: 'catering', label: 'Event Catering' },
+  { id: 'by-products', label: 'Organic Farm Inputs' },
+  { id: 'equipment', label: 'Equipment & Cages' },
 ];
 
 function ShopContent() {
@@ -101,7 +101,7 @@ function ShopContent() {
                 className={`category-pill ${activeCategory === cat.id ? 'active' : ''}`}
                 onClick={() => setActiveCategory(cat.id)}
               >
-                {cat.icon} {cat.label}
+                {cat.label}
               </button>
             ))}
           </div>

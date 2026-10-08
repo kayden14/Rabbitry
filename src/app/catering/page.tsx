@@ -62,11 +62,11 @@ export default function CateringPage() {
               <div className="eyebrow"><span>🍽️</span> Our Catering Menu</div>
               <h2 className="display-md">Signature Rabbit Dishes</h2>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: '2rem' }}>
               {[
                 {
-                  emoji: '🔥',
-                  title: 'Marinated BBQ Rabbit Skewers',
+                  image: '/images/bbq-skewers.jpg',
+                  title: 'Herb-Marinated BBQ Rabbit Skewers',
                   desc: 'Tender rabbit meat marinated for 24 hours in our signature West African spice blend — suya pepper, ginger, garlic, and secret herbs. Charcoal-grilled to perfection and served on wooden skewers.',
                   serving: '10 skewers per tray (serves 5 guests)',
                   leadTime: '3 days minimum',
@@ -74,7 +74,7 @@ export default function CateringPage() {
                   events: ['Birthdays', 'Graduations', 'Corporate Events'],
                 },
                 {
-                  emoji: '👑',
+                  image: '/images/roasted-meat.jpg',
                   title: 'Golden Roasted Whole Rabbit',
                   desc: 'A luxurious centrepiece dish — whole rabbit slow-roasted over 4 hours with aromatic herbs, citrus, and a golden honey-spice glaze. Served on a decorative platter with garnishes. A talking-point dish for high-table settings.',
                   serving: '1 whole rabbit serves 3–4 guests',
@@ -83,10 +83,17 @@ export default function CateringPage() {
                   events: ['Weddings', 'Burials', 'Corporate Dinners', 'Graduation Parties'],
                 },
               ].map((dish, i) => (
-                <div key={i} className="card" style={{ overflow: 'visible' }}>
-                  <div style={{ background: 'linear-gradient(135deg,#4a2810,#7a4f2d)', padding: '2.5rem', textAlign: 'center' }}>
-                    <div style={{ fontSize: '5rem', marginBottom: '0.5rem' }}>{dish.emoji}</div>
-                    <h3 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontSize: '1.35rem', fontWeight: 800 }}>{dish.title}</h3>
+                <div key={i} className="card" style={{ overflow: 'hidden', borderRadius: '14px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.06)' }}>
+                  <div style={{ position: 'relative', height: '220px', width: '100%' }}>
+                    <img
+                      src={dish.image}
+                      alt={dish.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.8) 0%, transparent 60%)' }} />
+                    <h3 style={{ position: 'absolute', bottom: '16px', left: '16px', right: '16px', fontFamily: "'Playfair Display',serif", color: '#fff', fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
+                      {dish.title}
+                    </h3>
                   </div>
                   <div style={{ padding: '1.75rem' }}>
                     <p style={{ color: 'var(--gray-600)', lineHeight: 1.75, marginBottom: '1.25rem', fontSize: '0.9rem' }}>{dish.desc}</p>
