@@ -15,17 +15,19 @@ const NAV_LINKS = [
     { href: '/shop?cat=equipment', label: 'Equipment & Cages' },
   ]},
   { href: '/estimator', label: 'Farm Estimator' },
+  { href: '/guide', label: 'Free Guide' },
   { href: '/catering', label: 'Event Catering' },
-  { href: '/admin', label: 'Admin Desk' },
 ];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const totalItems = useCartStore(s => s.getTotalItems());
 
   useEffect(() => {
+    setMounted(true);
     const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -86,7 +88,7 @@ export default function Navbar() {
               <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
               <path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/>
             </svg>
-            {totalItems > 0 && (
+            {mounted && totalItems > 0 && (
               <span className={styles.cartBadge}>{totalItems}</span>
             )}
           </Link>
