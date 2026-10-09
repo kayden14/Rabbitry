@@ -112,7 +112,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div style={{borderTop:'1px solid rgba(255,255,255,0.12)',paddingTop:'1.5rem',display:'flex',flexWrap:'wrap',alignItems:'center',justifyContent:'space-between',gap:'1rem'}}>
+        <div className="footer-bottom" style={{borderTop:'1px solid rgba(255,255,255,0.12)',paddingTop:'1.5rem',display:'flex',flexWrap:'wrap',alignItems:'center',justifyContent:'space-between',gap:'1rem'}}>
           <p style={{color:'rgba(255,255,255,0.45)',fontSize:'0.8rem'}}>
             © {year} Danethicals Limited — RABBITRY. All rights reserved.
           </p>
@@ -120,7 +120,6 @@ export default function Footer() {
             {[
               {href:'/privacy',label:'Privacy Policy'},
               {href:'/terms',label:'Terms'},
-              {href:'/admin',label:'Admin'},
             ].map(l => (
               <Link key={l.href} href={l.href} style={{color:'rgba(255,255,255,0.4)',fontSize:'0.78rem',transition:'color 0.2s'}}>{l.label}</Link>
             ))}

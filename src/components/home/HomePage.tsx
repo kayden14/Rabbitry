@@ -123,6 +123,7 @@ export default function HomePage() {
     <>
       {/* ── HERO: Full-Viewport Cinematic ──────────────────────── */}
       <section
+        className="hero-section-wrap"
         style={{
           position: 'relative',
           minHeight: 'calc(100vh - 72px)',
@@ -274,6 +275,7 @@ export default function HomePage() {
 
               {/* CTA buttons */}
               <div
+                className="hero-cta-row"
                 style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '2.5rem' }}
               >
                 <Link
@@ -1009,7 +1011,7 @@ export default function HomePage() {
               alignItems: 'center',
             }}
           >
-            <div style={{ padding: '3.5rem 3rem' }}>
+            <div className="catering-text-pad" style={{ padding: '3.5rem 3rem' }}>
               <span
                 style={{
                   background: 'rgba(217,168,65,0.25)',
@@ -1176,6 +1178,7 @@ export default function HomePage() {
       <section style={{ background: '#082e11', color: '#ffffff', padding: '3.5rem 0' }}>
         <div className="container">
           <div
+            className="contact-strip-row"
             style={{
               display: 'flex',
               alignItems: 'center',

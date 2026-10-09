@@ -79,12 +79,13 @@ export default function CartPage() {
         </div>
 
         <div className="container" style={{ padding: '3rem 1.25rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2.5rem', alignItems: 'start' }}>
+          <div className="cart-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2.5rem', alignItems: 'start' }}>
             {/* Cart Items */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {items.map(item => (
                 <div
                   key={item.product.id}
+                  className="cart-item-row"
                   style={{
                     background: '#fff',
                     borderRadius: 'var(--radius-lg)',
@@ -163,7 +164,7 @@ export default function CartPage() {
                     </div>
                   </div>
 
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div className="cart-item-price" style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{
                       fontFamily: "'Playfair Display',serif",
                       fontSize: '1.1rem', fontWeight: 800,
