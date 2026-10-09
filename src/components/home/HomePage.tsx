@@ -153,7 +153,7 @@ export default function HomePage() {
             position: 'absolute',
             inset: 0,
             background:
-              'linear-gradient(105deg, rgba(5,18,9,0.93) 0%, rgba(9,40,19,0.80) 55%, rgba(7,31,14,0.55) 100%)',
+              'linear-gradient(105deg, rgba(4,14,7,0.92) 0%, rgba(8,35,16,0.76) 50%, rgba(6,26,11,0.48) 100%)',
             zIndex: 1,
           }}
         />
@@ -165,7 +165,7 @@ export default function HomePage() {
             left: 0,
             right: 0,
             height: '180px',
-            background: 'linear-gradient(to top, #f8fafc 0%, transparent 100%)',
+            background: 'linear-gradient(to top, #fdf6ec 0%, transparent 100%)',
             zIndex: 2,
           }}
         />
@@ -177,7 +177,7 @@ export default function HomePage() {
             inset: 0,
             zIndex: 1,
             backgroundImage:
-              'radial-gradient(circle, rgba(217,168,65,0.08) 1px, transparent 1px)',
+              'radial-gradient(circle, rgba(246,199,61,0.07) 1px, transparent 1px)',
             backgroundSize: '44px 44px',
             pointerEvents: 'none',
           }}
@@ -210,8 +210,8 @@ export default function HomePage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  background: 'rgba(217,168,65,0.18)',
-                  border: '1px solid rgba(217,168,65,0.40)',
+                  background: 'rgba(246,199,61,0.16)',
+                  border: '1px solid rgba(246,199,61,0.42)',
                   borderRadius: '30px',
                   padding: '5px 14px 5px 8px',
                   marginBottom: '1.5rem',
@@ -223,14 +223,14 @@ export default function HomePage() {
                     width: 8,
                     height: 8,
                     borderRadius: '50%',
-                    background: '#d9a841',
-                    boxShadow: '0 0 8px #d9a841',
+                    background: '#e8a830',
+                    boxShadow: '0 0 8px #e8a830',
                     animation: 'heroPulse 2s ease-in-out infinite',
                   }}
                 />
                 <span
                   style={{
-                    color: '#f6d37d',
+                    color: '#f6c73d',
                     fontSize: '0.74rem',
                     fontWeight: 700,
                     letterSpacing: '0.07em',
@@ -243,26 +243,19 @@ export default function HomePage() {
 
               <h1
                 style={{
-                  fontSize: 'clamp(2.2rem, 5vw, 3.8rem)',
+                  fontSize: 'clamp(2.5rem, 5.8vw, 4.3rem)',
                   fontFamily: "'Playfair Display', Georgia, serif",
                   fontWeight: 900,
-                  lineHeight: 1.13,
+                  lineHeight: 1.12,
                   marginBottom: '1.4rem',
                   letterSpacing: '-0.02em',
-                  textShadow: '0 2px 20px rgba(0,0,0,0.3)',
+                  background: 'linear-gradient(90deg, #f6c73d 0%, #e8a830 50%, #f6c73d 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: 'drop-shadow(0 2px 24px rgba(0,0,0,0.5))',
                 }}
               >
-                Nigeria&apos;s Premier{' '}
-                <span
-                  style={{
-                    background: 'linear-gradient(90deg, #f6d37d 0%, #d9a841 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
-                >
-                  Commercial Rabbitry
-                </span>{' '}
-                &amp; Farm Supply Hub
+                Nigeria&apos;s Premier Commercial Rabbitry &amp; Farm Supply Hub
               </h1>
 
               <p
@@ -274,7 +267,7 @@ export default function HomePage() {
                   maxWidth: '530px',
                 }}
               >
-                Full-cycle rabbit agribusiness — health-certified breeding stock, hygienically
+                Full-cycle rabbit agribusiness, health-certified breeding stock, hygienically
                 dressed meat, gourmet event catering, organic fertilizer &amp; custom-welded
                 battery cages. Nationwide delivery from Ile-Ife, Osun State.
               </p>
@@ -285,9 +278,10 @@ export default function HomePage() {
               >
                 <Link
                   href="/shop"
+                  className="shimmer-btn"
                   style={{
-                    background: 'linear-gradient(135deg, #d9a841 0%, #b8892a 100%)',
-                    color: '#0f172a',
+                    background: 'linear-gradient(135deg, #c98a12 0%, #e8a830 100%)',
+                    color: '#0a1f0d',
                     fontWeight: 800,
                     fontSize: '0.95rem',
                     padding: '14px 28px',
@@ -296,7 +290,7 @@ export default function HomePage() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '8px',
-                    boxShadow: '0 4px 20px rgba(217,168,65,0.45)',
+                    boxShadow: '0 4px 22px rgba(201,138,18,0.55)',
                     transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                   }}
                 >
@@ -309,8 +303,9 @@ export default function HomePage() {
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="shimmer-btn"
                   style={{
-                    background: '#25d366',
+                    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
                     color: '#ffffff',
                     fontWeight: 700,
                     fontSize: '0.92rem',
@@ -320,7 +315,7 @@ export default function HomePage() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '8px',
-                    boxShadow: '0 4px 14px rgba(37,211,102,0.35)',
+                    boxShadow: '0 4px 16px rgba(34,197,94,0.40)',
                   }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -328,6 +323,28 @@ export default function HomePage() {
                   </svg>
                   WhatsApp Order
                 </a>
+
+                <button
+                  type="button"
+                  onClick={() => setShowLeadModal(true)}
+                  style={{
+                    background: 'rgba(246,199,61,0.18)',
+                    border: '1px solid rgba(246,199,61,0.60)',
+                    backdropFilter: 'blur(10px)',
+                    color: '#f6c73d',
+                    fontWeight: 700,
+                    fontSize: '0.92rem',
+                    padding: '14px 20px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  📘 Free Guide (PDF)
+                </button>
 
                 <Link
                   href="/estimator"
@@ -371,7 +388,7 @@ export default function HomePage() {
                       style={{
                         fontSize: '1.65rem',
                         fontWeight: 900,
-                        color: '#f6d37d',
+                        color: '#f6c73d',
                         fontFamily: "'Playfair Display', serif",
                         lineHeight: 1,
                         marginBottom: '4px',
@@ -575,8 +592,8 @@ export default function HomePage() {
         {/* Hero animations */}
         <style jsx global>{`
           @keyframes heroPulse {
-            0%, 100% { box-shadow: 0 0 8px #d9a841; }
-            50% { box-shadow: 0 0 16px #d9a841, 0 0 24px rgba(217,168,65,0.4); }
+            0%, 100% { box-shadow: 0 0 8px #e8a830; }
+            50% { box-shadow: 0 0 18px #e8a830, 0 0 28px rgba(232,168,48,0.4); }
           }
           @keyframes heroFloat {
             0%, 100% { transform: translateY(0px); }
@@ -624,8 +641,8 @@ export default function HomePage() {
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
-                color: '#0f431f',
-                background: '#e2f4e8',
+                color: '#082e11',
+                background: '#d1fae0',
                 padding: '4px 12px',
                 borderRadius: '4px',
                 display: 'inline-block',
@@ -725,7 +742,7 @@ export default function HomePage() {
                       style={{
                         fontSize: '0.8rem',
                         fontWeight: 700,
-                        color: '#0f431f',
+                        color: '#082e11',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '4px',
@@ -761,7 +778,7 @@ export default function HomePage() {
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
-                  color: '#0f431f',
+                  color: '#082e11',
                   background: '#e2f4e8',
                   padding: '4px 12px',
                   borderRadius: '4px',
@@ -789,7 +806,7 @@ export default function HomePage() {
               style={{
                 fontSize: '0.88rem',
                 fontWeight: 700,
-                color: '#0f431f',
+                color: '#082e11',
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -824,7 +841,7 @@ export default function HomePage() {
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
-                color: '#0f431f',
+                color: '#082e11',
                 background: '#e2f4e8',
                 padding: '4px 12px',
                 borderRadius: '4px',
@@ -933,7 +950,7 @@ export default function HomePage() {
       <section
         style={{
           padding: '5rem 0',
-          background: 'linear-gradient(135deg, #092813 0%, #0f431f 100%)',
+          background: 'linear-gradient(135deg, #082e11 0%, #145220 100%)',
           color: '#ffffff',
         }}
       >
@@ -1089,7 +1106,7 @@ export default function HomePage() {
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
-                color: '#0f431f',
+                color: '#082e11',
                 background: '#e2f4e8',
                 padding: '4px 12px',
                 borderRadius: '4px',
@@ -1146,7 +1163,7 @@ export default function HomePage() {
                 </p>
                 <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '14px' }}>
                   <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }}>{t.name}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#0f431f', fontWeight: 600 }}>{t.role}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#082e11', fontWeight: 600 }}>{t.role}</div>
                   <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{t.location}</div>
                 </div>
               </div>
@@ -1156,7 +1173,7 @@ export default function HomePage() {
       </section>
 
       {/* ── CORPORATE CONTACT & LOCATION STRIP ───────────────────── */}
-      <section style={{ background: '#092813', color: '#ffffff', padding: '3.5rem 0' }}>
+      <section style={{ background: '#082e11', color: '#ffffff', padding: '3.5rem 0' }}>
         <div className="container">
           <div
             style={{

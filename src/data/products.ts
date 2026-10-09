@@ -626,7 +626,7 @@ export const equipmentProducts: EquipmentProduct[] = [
     materialSpec: 'ABS plastic casing with stainless steel hook.',
     description: 'Precision digital hanging scale for monitoring livestock growth rates.',
     price: 18000,
-    images: ['/images/dispatch-crate.jpg'],
+    images: ['/images/digital-scale.jpg'],
     stockStatus: 'in-stock',
     featured: true,
     createdAt: '2026-02-18T00:00:00Z',

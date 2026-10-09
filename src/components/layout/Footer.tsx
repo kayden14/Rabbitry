@@ -52,6 +52,7 @@ export default function Footer() {
                 { href:'/shop?cat=by-products', label:'Organic Farm Inputs' },
                 { href:'/shop?cat=equipment', label:'Cages & Equipment' },
                 { href:'/estimator', label:'Farm Estimator Tool' },
+                { href:'/guide', label:'Free Farming Guide (PDF)' },
               ].map(l => (
                 <li key={l.href}>
                   <Link href={l.href} style={{color:'rgba(255,255,255,0.65)',fontSize:'0.875rem',transition:'color 0.2s'}}

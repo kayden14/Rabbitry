@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -33,10 +33,15 @@ export default function CheckoutPage() {
   const { items, getSubtotal, clearCart } = useCartStore();
   const subtotal = getSubtotal();
 
+  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<'details' | 'payment-review' | 'confirmed'>('details');
   const [payMethod, setPayMethod] = useState<PaymentMethod>('bank-transfer');
   const [copiedBank, setCopiedBank] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Form details
   const [form, setForm] = useState<CheckoutFormData>({
@@ -186,6 +191,21 @@ export default function CheckoutPage() {
       finalizeOrder(true, randomRef);
     }, 1500);
   };
+
+  if (!mounted) {
+    return (
+      <>
+        <Navbar />
+        <main style={{ minHeight: '65vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🐇</div>
+            <p style={{ color: '#64748b' }}>Loading checkout...</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   if (items.length === 0 && step === 'details') {
     return (
