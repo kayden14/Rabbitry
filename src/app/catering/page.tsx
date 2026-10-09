@@ -26,43 +26,130 @@ export default function CateringPage() {
 
   return (
     <>
+      <style>{`
+        .cat-hero-btns {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          justify-content: center;
+        }
+        .cat-menu-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 2rem;
+        }
+        .cat-form-wrap {
+          background: #fff;
+          border-radius: var(--radius-xl);
+          padding: 2.5rem;
+          box-shadow: var(--shadow-lg);
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+        .cat-row-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+        }
+        .cat-success {
+          background: #fff;
+          border-radius: var(--radius-xl);
+          padding: 3rem;
+          text-align: center;
+          box-shadow: var(--shadow-lg);
+        }
+        .cat-phone-row {
+          display: flex;
+          justify-content: center;
+          gap: 2rem;
+          padding-top: 0.5rem;
+          flex-wrap: wrap;
+        }
+
+        /* Tablet */
+        @media (max-width: 768px) {
+          .cat-form-wrap { padding: 1.75rem; }
+          .cat-success   { padding: 2rem; }
+        }
+
+        /* Phone — collapse 2-col form grids to 1 col */
+        @media (max-width: 560px) {
+          .cat-hero-btns > a,
+          .cat-hero-btns > button {
+            width: 100%;
+            justify-content: center !important;
+          }
+          .cat-row-2 {
+            grid-template-columns: 1fr !important;
+          }
+          .cat-form-wrap { padding: 1.25rem; }
+          .cat-success   { padding: 1.5rem; }
+          .cat-menu-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+          .cat-phone-row { gap: 1rem; flex-direction: column; align-items: center; }
+        }
+
+        @media (max-width: 360px) {
+          .cat-form-wrap { padding: 1rem; }
+        }
+      `}</style>
+
       <Navbar />
       <main>
-        {/* Hero */}
+        {/* ── Hero ── */}
         <div style={{
           background: 'linear-gradient(135deg,#4a2810,#7a4f2d)',
-          padding: '6rem 0 4rem',
+          padding: 'clamp(3rem, 8vw, 6rem) 0 clamp(2.5rem, 6vw, 4rem)',
           textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
         }}>
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 1px 1px,rgba(255,255,255,0.04) 1px,transparent 0)', backgroundSize: '28px 28px' }} />
           <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(201,146,26,0.2)', border: '1px solid rgba(201,146,26,0.4)', borderRadius: '999px', padding: '0.3rem 1rem', marginBottom: '1.25rem', color: 'var(--brand-gold-light)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+              background: 'rgba(201,146,26,0.2)', border: '1px solid rgba(201,146,26,0.4)',
+              borderRadius: '999px', padding: '0.3rem 1rem', marginBottom: '1.25rem',
+              color: 'var(--brand-gold-light)', fontSize: '0.8rem', fontWeight: 600,
+              textTransform: 'uppercase', letterSpacing: '0.08em',
+            }}>
               🍖 Premium Event Catering
             </span>
-            <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 'clamp(2rem,4vw,3.5rem)', fontWeight: 900, color: '#fff', lineHeight: 1.2, marginBottom: '1.25rem' }}>
-              Rabbit Cuisine for Your<br/>
+            <h1 style={{
+              fontFamily: "'Playfair Display',serif",
+              fontSize: 'clamp(1.75rem, 5vw, 3.5rem)',
+              fontWeight: 900, color: '#fff', lineHeight: 1.2, marginBottom: '1.25rem',
+            }}>
+              Rabbit Cuisine for Your<br />
               <span style={{ color: 'var(--brand-gold-light)' }}>Special Events</span>
             </h1>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '1.05rem', lineHeight: 1.75, maxWidth: 600, margin: '0 auto 2.5rem' }}>
+            <p style={{
+              color: 'rgba(255,255,255,0.7)', fontSize: 'clamp(0.9rem, 2.5vw, 1.05rem)',
+              lineHeight: 1.75, maxWidth: 600, margin: '0 auto 2.5rem',
+            }}>
               From intimate birthday dinners to large wedding banquets — we bring premium rabbit cuisine to your table. Marinated BBQ skewers and golden roasted whole rabbit, freshly prepared for your event.
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+            <div className="cat-hero-btns">
               <a href="#inquiry" className="btn btn-gold btn-lg">Get a Free Quote</a>
-              <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello RABBITRY, I need a catering quote for my event. Can we discuss?')}`} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-lg">Chat on WhatsApp</a>
+              <a
+                href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello RABBITRY, I need a catering quote for my event. Can we discuss?')}`}
+                target="_blank" rel="noopener noreferrer"
+                className="btn btn-whatsapp btn-lg"
+              >
+                Chat on WhatsApp
+              </a>
             </div>
           </div>
         </div>
 
-        {/* Menu */}
+        {/* ── Menu ── */}
         <section className="section" style={{ background: '#fff' }}>
           <div className="container">
             <div className="section-header">
               <div className="eyebrow"><span>🍽️</span> Our Catering Menu</div>
               <h2 className="display-md">Signature Rabbit Dishes</h2>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: '2rem' }}>
+            <div className="cat-menu-grid">
               {[
                 {
                   image: '/images/bbq-skewers.jpg',
@@ -85,27 +172,23 @@ export default function CateringPage() {
               ].map((dish, i) => (
                 <div key={i} className="card" style={{ overflow: 'hidden', borderRadius: '14px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.06)' }}>
                   <div style={{ position: 'relative', height: '220px', width: '100%' }}>
-                    <img
-                      src={dish.image}
-                      alt={dish.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                    <img src={dish.image} alt={dish.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.8) 0%, transparent 60%)' }} />
-                    <h3 style={{ position: 'absolute', bottom: '16px', left: '16px', right: '16px', fontFamily: "'Playfair Display',serif", color: '#fff', fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
+                    <h3 style={{ position: 'absolute', bottom: '16px', left: '16px', right: '16px', fontFamily: "'Playfair Display',serif", color: '#fff', fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: 800, margin: 0 }}>
                       {dish.title}
                     </h3>
                   </div>
-                  <div style={{ padding: '1.75rem' }}>
+                  <div style={{ padding: 'clamp(1.25rem, 4vw, 1.75rem)' }}>
                     <p style={{ color: 'var(--gray-600)', lineHeight: 1.75, marginBottom: '1.25rem', fontSize: '0.9rem' }}>{dish.desc}</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
                       {[
                         { label: '🍽️ Serving Size', val: dish.serving },
-                        { label: '⏰ Lead Time', val: dish.leadTime },
+                        { label: '⏰ Lead Time',    val: dish.leadTime },
                         { label: '💰 Starting From', val: dish.startPrice },
                       ].map(r => (
-                        <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', padding: '0.4rem 0', borderBottom: '1px solid var(--gray-100)' }}>
+                        <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.25rem', fontSize: '0.82rem', padding: '0.4rem 0', borderBottom: '1px solid var(--gray-100)' }}>
                           <span style={{ color: 'var(--gray-500)' }}>{r.label}</span>
-                          <span style={{ fontWeight: 700, color: 'var(--gray-800)' }}>{r.val}</span>
+                          <span style={{ fontWeight: 700, color: 'var(--gray-800)', textAlign: 'right' }}>{r.val}</span>
                         </div>
                       ))}
                     </div>
@@ -124,7 +207,7 @@ export default function CateringPage() {
           </div>
         </section>
 
-        {/* Inquiry Form */}
+        {/* ── Inquiry Form ── */}
         <section id="inquiry" className="section" style={{ background: 'var(--brand-cream)' }}>
           <div className="container">
             <div style={{ maxWidth: 680, margin: '0 auto' }}>
@@ -135,19 +218,28 @@ export default function CateringPage() {
               </div>
 
               {submitted ? (
-                <div style={{ background: '#fff', borderRadius: 'var(--radius-xl)', padding: '3rem', textAlign: 'center', boxShadow: 'var(--shadow-lg)' }}>
+                <div className="cat-success">
                   <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
-                  <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.5rem', fontWeight: 700, color: 'var(--brand-green-dark)', marginBottom: '0.75rem' }}>Inquiry Sent!</h3>
+                  <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.5rem', fontWeight: 700, color: 'var(--brand-green-dark)', marginBottom: '0.75rem' }}>
+                    Inquiry Sent!
+                  </h3>
                   <p style={{ color: 'var(--gray-600)', lineHeight: 1.7 }}>
                     Thank you! Our catering team will contact you within 24 hours. For faster response, WhatsApp us directly.
                   </p>
-                  <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello RABBITRY, I just submitted a catering inquiry on your website for my ' + form.eventType + '. Can we discuss?')}`} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-lg" style={{ marginTop: '1.5rem', justifyContent: 'center' }}>
+                  <a
+                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello RABBITRY, I just submitted a catering inquiry on your website for my ' + form.eventType + '. Can we discuss?')}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="btn btn-whatsapp btn-lg"
+                    style={{ marginTop: '1.5rem', justifyContent: 'center', width: '100%' }}
+                  >
                     Follow Up on WhatsApp
                   </a>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} style={{ background: '#fff', borderRadius: 'var(--radius-xl)', padding: '2.5rem', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <form onSubmit={handleSubmit} className="cat-form-wrap">
+
+                  {/* Row 1: Name + Phone */}
+                  <div className="cat-row-2">
                     <div className="form-group">
                       <label className="form-label">Your Name *</label>
                       <input required className="form-input" placeholder="Full name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
@@ -157,11 +249,15 @@ export default function CateringPage() {
                       <input required type="tel" className="form-input" placeholder="08012345678" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
                     </div>
                   </div>
+
+                  {/* Email */}
                   <div className="form-group">
                     <label className="form-label">Email Address</label>
                     <input type="email" className="form-input" placeholder="optional" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+
+                  {/* Row 2: Event Type + Date */}
+                  <div className="cat-row-2">
                     <div className="form-group">
                       <label className="form-label">Event Type *</label>
                       <select required className="form-input form-select" value={form.eventType} onChange={e => setForm(f => ({ ...f, eventType: e.target.value }))}>
@@ -174,7 +270,9 @@ export default function CateringPage() {
                       <input required type="date" className="form-input" value={form.eventDate} onChange={e => setForm(f => ({ ...f, eventDate: e.target.value }))} />
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+
+                  {/* Row 3: Guest Count + Location */}
+                  <div className="cat-row-2">
                     <div className="form-group">
                       <label className="form-label">Approx. Guest Count *</label>
                       <input required type="number" className="form-input" placeholder="e.g. 200" value={form.guestCount} onChange={e => setForm(f => ({ ...f, guestCount: e.target.value }))} />
@@ -184,25 +282,31 @@ export default function CateringPage() {
                       <input className="form-input" placeholder="e.g. Ile-Ife, Osun" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} />
                     </div>
                   </div>
+
+                  {/* Menu selection */}
                   <div className="form-group">
                     <label className="form-label">Preferred Menu Item(s)</label>
                     <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
                       {['BBQ Skewers', 'Roasted Whole Rabbit', 'Both'].map(item => (
-                        <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.875rem' }}>
+                        <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.875rem', minHeight: '36px' }}>
                           <input type="radio" name="menu" value={item} onChange={e => setForm(f => ({ ...f, preferredMenu: e.target.value }))} />
                           {item}
                         </label>
                       ))}
                     </div>
                   </div>
+
+                  {/* Message */}
                   <div className="form-group">
                     <label className="form-label">Additional Message</label>
                     <textarea className="form-input form-textarea" placeholder="Any special requirements, dietary needs, or questions..." value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
                   </div>
-                  <button type="submit" className="btn btn-gold btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
+
+                  <button type="submit" className="btn btn-gold btn-lg" style={{ width: '100%', justifyContent: 'center', minHeight: '50px' }}>
                     📋 Submit Catering Inquiry
                   </button>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', paddingTop: '0.5rem' }}>
+
+                  <div className="cat-phone-row">
                     <a href={`tel:${PHONE_1}`} style={{ color: 'var(--brand-green)', fontSize: '0.875rem', fontWeight: 600 }}>📞 {PHONE_1}</a>
                     <a href={`tel:${PHONE_2}`} style={{ color: 'var(--brand-green)', fontSize: '0.875rem', fontWeight: 600 }}>📞 {PHONE_2}</a>
                   </div>
