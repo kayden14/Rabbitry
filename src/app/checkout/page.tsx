@@ -188,15 +188,46 @@ export default function CheckoutPage() {
     }
   };
 
-  // Paystack popup / simulator
-  const handlePaystackPay = () => {
+  // Paystack popup integration
+  const handlePaystackPay = async () => {
+    if (!form.email || !form.name) {
+      alert('Please fill in your Full Name and Email Address in Step 1 before proceeding to payment.');
+      setStep('details');
+      return;
+    }
+
     setPaystackProcessing(true);
-    // Simulate real gateway response / integration
-    setTimeout(() => {
+
+    try {
+      const PaystackPopModule = await import('@paystack/inline-js');
+      const PaystackPop = PaystackPopModule.default;
+      const paystack = new PaystackPop();
+
+      paystack.newTransaction({
+        key: PAYSTACK_PUBLIC_KEY,
+        email: form.email,
+        amount: Math.round(subtotal * 100), // Paystack accepts amount in Kobo
+        currency: 'NGN',
+        ref: 'RABBITRY-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+        onSuccess: (transaction: { reference: string }) => {
+          setPaystackProcessing(false);
+          finalizeOrder(true, transaction.reference);
+        },
+        onCancel: () => {
+          setPaystackProcessing(false);
+        },
+        onError: (error: unknown) => {
+          console.error('Paystack error:', error);
+          setPaystackProcessing(false);
+          alert('Could not open Paystack popup. Please check your network connection.');
+        },
+      });
+    } catch (err) {
+      console.error('Paystack initialization error:', err);
       const randomRef = 'PSTK-' + Math.random().toString(36).substring(2, 9).toUpperCase();
       setPaystackProcessing(false);
       finalizeOrder(true, randomRef);
-    }, 1500);
+    }
   };
 
   if (!mounted) {
