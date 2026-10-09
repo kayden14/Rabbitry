@@ -16,8 +16,8 @@ function SpecRow({ label, value }: { label: string; value: string | number | boo
   const display = typeof value === 'boolean' ? (value ? '✅ Yes' : '❌ No') : String(value);
   return (
     <tr style={{ borderBottom: '1px solid var(--gray-100)' }}>
-      <td style={{ padding: '0.75rem 0', fontWeight: 600, color: 'var(--gray-600)', fontSize: '0.875rem', width: '40%' }}>{label}</td>
-      <td style={{ padding: '0.75rem 0', color: 'var(--gray-800)', fontSize: '0.875rem' }}>{display}</td>
+      <td style={{ padding: '0.65rem 0.5rem 0.65rem 0', fontWeight: 600, color: 'var(--gray-600)', fontSize: '0.85rem', width: '38%', wordBreak: 'break-word' }}>{label}</td>
+      <td style={{ padding: '0.65rem 0', color: 'var(--gray-800)', fontSize: '0.85rem', wordBreak: 'break-word' }}>{display}</td>
     </tr>
   );
 }
@@ -79,13 +79,15 @@ function ProductSpecs({ product }: { product: ReturnType<typeof getProductBySlug
   }
 
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-      <tbody>
-        {rows.map((row, i) => (
-          <SpecRow key={i} label={row.label} value={row.value} />
-        ))}
-      </tbody>
-    </table>
+    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <tbody>
+          {rows.map((row, i) => (
+            <SpecRow key={i} label={row.label} value={row.value} />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -116,9 +118,62 @@ function ProductDetailContent({ params }: { params: Promise<{ slug: string }> })
     <>
       <Navbar />
       <main>
-        <div className="container" style={{ padding: '3rem 1.25rem' }}>
+        <style>{`
+          .prod-container {
+            padding: clamp(1.25rem, 3vw, 2.5rem) 1.25rem;
+          }
+          .prod-detail-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+            gap: 3rem;
+            margin-bottom: 3.5rem;
+            align-items: start;
+          }
+          .prod-btn-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+          }
+          .prod-detail-cta {
+            white-space: normal !important;
+            text-align: center !important;
+            word-break: break-word !important;
+          }
+          @media (max-width: 860px) {
+            .prod-detail-grid {
+              grid-template-columns: 1fr;
+              gap: 2rem;
+              margin-bottom: 2.5rem;
+            }
+          }
+          @media (max-width: 480px) {
+            .prod-container {
+              padding: 1rem 0.85rem 3rem !important;
+            }
+            .prod-title {
+              font-size: 1.5rem !important;
+            }
+            .prod-price {
+              font-size: 1.75rem !important;
+              margin-bottom: 1rem !important;
+            }
+            .prod-btn-split {
+              grid-template-columns: 1fr !important;
+            }
+            .prod-btn-split a,
+            .prod-btn-split button {
+              width: 100% !important;
+              justify-content: center !important;
+            }
+            .prod-detail-cta {
+              font-size: 0.92rem !important;
+              padding: 0.85rem 1rem !important;
+            }
+          }
+        `}</style>
+        <div className="container prod-container">
           {/* Breadcrumb */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', fontSize: '0.82rem', color: 'var(--gray-500)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', fontSize: '0.82rem', color: 'var(--gray-500)', flexWrap: 'wrap' }}>
             <Link href="/" style={{ color: 'var(--brand-green)' }}>Home</Link>
             <span>›</span>
             <Link href="/shop" style={{ color: 'var(--brand-green)' }}>Shop</Link>
@@ -126,7 +181,7 @@ function ProductDetailContent({ params }: { params: Promise<{ slug: string }> })
             <span>{product.name}</span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', marginBottom: '4rem' }}>
+          <div className="prod-detail-grid">
             {/* Left: Image */}
             <div>
               <div style={{
@@ -183,7 +238,7 @@ function ProductDetailContent({ params }: { params: Promise<{ slug: string }> })
                 </span>
               </div>
 
-              <h1 style={{
+              <h1 className="prod-title" style={{
                 fontFamily: "'Playfair Display',serif",
                 fontSize: 'clamp(1.5rem,3vw,2.25rem)',
                 fontWeight: 800,
@@ -194,7 +249,7 @@ function ProductDetailContent({ params }: { params: Promise<{ slug: string }> })
                 {product.name}
               </h1>
 
-              <div style={{
+              <div className="prod-price" style={{
                 fontFamily: "'Playfair Display',serif",
                 fontSize: '2.25rem',
                 fontWeight: 800,
@@ -260,7 +315,7 @@ function ProductDetailContent({ params }: { params: Promise<{ slug: string }> })
                 <button
                   onClick={handleAddToCart}
                   disabled={product.stockStatus === 'out-of-stock'}
-                  className="btn btn-primary btn-lg"
+                  className="btn btn-primary btn-lg prod-detail-cta"
                   style={{
                     width: '100%', justifyContent: 'center',
                     background: added ? 'linear-gradient(135deg,#16a34a,#22c55e)' : undefined,
@@ -274,7 +329,7 @@ function ProductDetailContent({ params }: { params: Promise<{ slug: string }> })
                   href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn btn-whatsapp btn-lg"
+                  className="btn btn-whatsapp btn-lg prod-detail-cta"
                   style={{ width: '100%', justifyContent: 'center' }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -283,11 +338,11 @@ function ProductDetailContent({ params }: { params: Promise<{ slug: string }> })
                   Order via WhatsApp Now
                 </a>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                  <a href={`tel:${PHONE_1}`} className="btn btn-outline" style={{ justifyContent: 'center' }}>
+                <div className="prod-btn-split">
+                  <a href={`tel:${PHONE_1}`} className="btn btn-outline prod-detail-cta" style={{ justifyContent: 'center' }}>
                     📞 Call to Order
                   </a>
-                  <Link href="/cart" className="btn" style={{ background: 'var(--gray-100)', color: 'var(--gray-700)', justifyContent: 'center', borderRadius: 'var(--radius-full)' }}>
+                  <Link href="/cart" className="btn prod-detail-cta" style={{ background: 'var(--gray-100)', color: 'var(--gray-700)', justifyContent: 'center', borderRadius: 'var(--radius-full)' }}>
                     🛒 View Cart
                   </Link>
                 </div>
@@ -322,7 +377,7 @@ function ProductDetailContent({ params }: { params: Promise<{ slug: string }> })
               }}>
                 More from This Category
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 250px), 1fr))', gap: '1.5rem' }}>
                 {related.map((p, i) => (
                   <ProductCard key={p.id} product={p} delay={i * 0.1} />
                 ))}

@@ -628,7 +628,12 @@ button:active, .btn:active, a.btn:active {
   .section-header { margin-bottom: 1.5rem; }
 
   /* Touch-friendly minimum tap targets */
-  .btn { min-height: 44px; }
+  .btn {
+    min-height: 44px;
+    white-space: normal;
+    text-align: center;
+    max-width: 100%;
+  }
   .btn-sm { min-height: 38px; padding: 0.5rem 1rem; }
 
   .card { border-radius: var(--radius); }
@@ -639,8 +644,8 @@ button:active, .btn:active, a.btn:active {
 /* Very small phones */
 @media (max-width: 360px) {
   .container { padding: 0 0.75rem; }
-  .btn { font-size: 0.85rem; padding: 0.65rem 1.25rem; }
-  .btn-lg { font-size: 0.9rem; padding: 0.75rem 1.5rem; }
+  .btn { font-size: 0.85rem; padding: 0.65rem 1rem; white-space: normal; }
+  .btn-lg { font-size: 0.9rem; padding: 0.75rem 1.25rem; white-space: normal; }
 }
 
 /* ─── Cart page responsive ───────────────────────────────────── */

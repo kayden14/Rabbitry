@@ -47,9 +47,9 @@ export function formatCategoryLabel(category: string): string {
   return map[category] || category;
 }
 
-export const WHATSAPP_NUMBER = '2347052335766'; // international format, no +
-export const PHONE_1 = '07052335766';
-export const PHONE_2 = '08136228305';
+export const WHATSAPP_NUMBER = '2348136228305'; // international format, no +
+export const PHONE_1 = '08136228305';
+export const PHONE_2 = '07052335766';
 export const BANK_NAME = 'First Bank of Nigeria';
 export const BANK_ACCOUNT_NAME = 'Danethicals Limited';
 export const BANK_ACCOUNT_NUMBER = '2041893721';

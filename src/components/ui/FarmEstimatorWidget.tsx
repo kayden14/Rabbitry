@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { calculateEstimate, formatNaira } from '@/lib/utils';
+import { calculateEstimate, formatNaira, WHATSAPP_NUMBER } from '@/lib/utils';
 import { EstimatorResult } from '@/types';
 
 export default function FarmEstimatorWidget() {
@@ -249,7 +249,7 @@ export default function FarmEstimatorWidget() {
                 Shop Equipment
               </a>
               <a
-                href={`https://wa.me/2347052335766?text=${encodeURIComponent(
+                href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
                   `Hello RABBITRY, I need equipment for ${result.rabbitCount} rabbits: ${result.cageCount} cages and ${result.drinkerCount} drinkers. Please advise.`
                 )}`}
                 target="_blank"

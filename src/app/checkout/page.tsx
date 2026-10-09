@@ -63,6 +63,7 @@ export default function CheckoutPage() {
     paymentMethod: string;
     state: string;
     city: string;
+    items?: Array<{ name: string; quantity: number; price: number; image?: string }>;
   } | null>(null);
 
   // Paystack mock state
@@ -166,6 +167,12 @@ export default function CheckoutPage() {
           paymentMethod: isPaystack ? 'Paystack Online Gateway' : 'Direct Bank Transfer',
           state: form.state,
           city: form.city,
+          items: items.map((i) => ({
+            name: i.product.name,
+            quantity: i.quantity,
+            price: i.product.price,
+            image: i.product.images?.[0],
+          })),
         });
         clearCart();
         setStep('confirmed');
@@ -243,8 +250,79 @@ export default function CheckoutPage() {
   return (
     <>
       <Navbar />
-      <main style={{ minHeight: '100vh', background: '#f8fafc', padding: '3rem 0 5rem' }}>
-        <div className="container" style={{ maxWidth: 1100 }}>
+      <main style={{ minHeight: '100vh', background: '#f8fafc', padding: '2.5rem 0 5rem' }}>
+        <style>{`
+          .co-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.25rem;
+          }
+          .co-step-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 2rem;
+            align-items: start;
+          }
+          .co-form-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+          }
+          .co-card {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          }
+          .co-summary-sidebar {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 100px;
+          }
+          .co-review-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 32px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
+          }
+          .co-mobile-preview {
+            display: none;
+            margin-bottom: 0.5rem;
+          }
+          @media (max-width: 960px) {
+            .co-step-grid {
+              grid-template-columns: 1fr;
+              gap: 1.5rem;
+            }
+            .co-summary-sidebar {
+              position: static;
+            }
+            .co-mobile-preview {
+              display: block;
+            }
+          }
+          @media (max-width: 560px) {
+            .co-container {
+              padding: 0 1rem;
+            }
+            .co-form-split {
+              grid-template-columns: 1fr;
+            }
+            .co-card {
+              padding: 16px;
+            }
+            .co-review-card {
+              padding: 20px 14px;
+            }
+          }
+        `}</style>
+        <div className="co-container">
           {/* Progress Header */}
           <div style={{ marginBottom: '2.5rem' }}>
             <span
@@ -281,30 +359,78 @@ export default function CheckoutPage() {
 
           {/* STEP 1: CUSTOMER & LOGISTICS DETAILS */}
           {step === 'details' && (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                gap: '2.5rem',
-                alignItems: 'start',
-              }}
-            >
-              <form onSubmit={handleDetailsSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+            <div className="co-step-grid">
+              <form onSubmit={handleDetailsSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem', minWidth: 0 }}>
+                {/* Mobile-Only Items Preview Card with Images */}
+                <div className="co-mobile-preview co-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                      🛒 Your Selected Items ({items.reduce((s, i) => s + i.quantity, 0)})
+                    </h3>
+                    <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f431f' }}>
+                      {formatNaira(subtotal)}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch' }}>
+                    {items.map((item) => (
+                      <div
+                        key={item.product.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          padding: '8px 12px',
+                          flexShrink: 0,
+                          maxWidth: '240px',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: '6px',
+                            overflow: 'hidden',
+                            flexShrink: 0,
+                            background: '#fff',
+                            border: '1px solid #cbd5e1',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {item.product.images?.[0] ? (
+                            <img
+                              src={item.product.images[0]}
+                              alt={item.product.name}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <span style={{ fontSize: '1.3rem' }}>🐇</span>
+                          )}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.8rem', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {item.product.name}
+                          </div>
+                          <div style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                            Qty: {item.quantity} · {formatNaira(item.product.price * item.quantity)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Contact Card */}
-                <div
-                  style={{
-                    background: '#ffffff',
-                    borderRadius: '12px',
-                    border: '1px solid #e2e8f0',
-                    padding: '24px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                  }}
-                >
+                <div className="co-card">
                   <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', marginBottom: '16px' }}>
                     1. Contact & Customer Details
                   </h2>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                  <div className="co-form-split">
                     <div style={{ gridColumn: '1/-1' }}>
                       <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '5px' }}>
                         Full Name *
@@ -367,15 +493,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Dynamic Inter-State Logistics Card */}
-                <div
-                  style={{
-                    background: '#ffffff',
-                    borderRadius: '12px',
-                    border: '1px solid #e2e8f0',
-                    padding: '24px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                  }}
-                >
+                <div className="co-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                     <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
                       2. Inter-State Delivery Destination
@@ -394,7 +512,7 @@ export default function CheckoutPage() {
                     </span>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+                  <div className="co-form-split" style={{ marginBottom: '16px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '5px' }}>
                         Destination State *
@@ -505,15 +623,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Payment Method Selector */}
-                <div
-                  style={{
-                    background: '#ffffff',
-                    borderRadius: '12px',
-                    border: '1px solid #e2e8f0',
-                    padding: '24px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                  }}
-                >
+                <div className="co-card">
                   <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', marginBottom: '16px' }}>
                     3. Select Preferred Payment Channel
                   </h2>
@@ -683,41 +793,60 @@ export default function CheckoutPage() {
               </form>
 
               {/* Order Summary Sidebar */}
-              <div
-                style={{
-                  background: '#ffffff',
-                  borderRadius: '12px',
-                  border: '1px solid #e2e8f0',
-                  padding: '24px',
-                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-                  position: 'sticky',
-                  top: '100px',
-                }}
-              >
+              <div className="co-summary-sidebar">
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '16px' }}>
                   Order Summary
                 </h3>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
                   {items.map((item) => (
                     <div
                       key={item.product.id}
                       style={{
                         display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
+                        alignItems: 'center',
+                        gap: '12px',
                         fontSize: '0.85rem',
                         borderBottom: '1px solid #f1f5f9',
-                        paddingBottom: '8px',
+                        paddingBottom: '10px',
                       }}
                     >
-                      <div>
-                        <div style={{ fontWeight: 600, color: '#1e293b' }}>{item.product.name}</div>
+                      {/* Product Thumbnail Image */}
+                      <div
+                        style={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {item.product.images?.[0] ? (
+                          <img
+                            src={item.product.images[0]}
+                            alt={item.product.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: '1.4rem' }}>🐇</span>
+                        )}
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, color: '#1e293b', lineHeight: 1.3, marginBottom: '2px' }}>
+                          {item.product.name}
+                        </div>
                         <div style={{ color: '#64748b', fontSize: '0.78rem' }}>
                           Qty: {item.quantity} · {formatNaira(item.product.price)} each
                         </div>
                       </div>
-                      <div style={{ fontWeight: 700, color: '#0f172a' }}>
+
+                      <div style={{ fontWeight: 700, color: '#0f172a', flexShrink: 0, textAlign: 'right' }}>
                         {formatNaira(item.product.price * item.quantity)}
                       </div>
                     </div>
@@ -757,15 +886,7 @@ export default function CheckoutPage() {
           {/* STEP 2: PAYMENT EXECUTION & PROOF UPLOAD */}
           {step === 'payment-review' && (
             <div style={{ maxWidth: '640px', margin: '0 auto' }}>
-              <div
-                style={{
-                  background: '#ffffff',
-                  borderRadius: '16px',
-                  border: '1px solid #e2e8f0',
-                  padding: '32px',
-                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)',
-                }}
-              >
+              <div className="co-review-card">
                 {/* Method 1 View: Direct Bank Transfer Details */}
                 {payMethod === 'bank-transfer' && (
                   <div>
@@ -801,6 +922,59 @@ export default function CheckoutPage() {
                         Transfer exactly <strong style={{ color: '#0f431f' }}>{formatNaira(subtotal)}</strong> to the
                         corporate account below:
                       </p>
+                    </div>
+
+                    {/* Items being purchased with thumbnails */}
+                    <div
+                      style={{
+                        background: '#f8fafc',
+                        borderRadius: '10px',
+                        border: '1px solid #e2e8f0',
+                        padding: '14px',
+                        marginBottom: '20px',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        📦 Items in this Order ({items.reduce((s, i) => s + i.quantity, 0)}):
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {items.map((item) => (
+                          <div key={item.product.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div
+                              style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: '6px',
+                                overflow: 'hidden',
+                                flexShrink: 0,
+                                background: '#fff',
+                                border: '1px solid #cbd5e1',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {item.product.images?.[0] ? (
+                                <img
+                                  src={item.product.images[0]}
+                                  alt={item.product.name}
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                              ) : (
+                                <span style={{ fontSize: '1.2rem' }}>🐇</span>
+                              )}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0, fontSize: '0.82rem' }}>
+                              <div style={{ fontWeight: 600, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {item.product.name}
+                              </div>
+                              <div style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                                Qty: {item.quantity} · {formatNaira(item.product.price * item.quantity)}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Official Bank Account Box */}
@@ -1000,6 +1174,59 @@ export default function CheckoutPage() {
                       </p>
                     </div>
 
+                    {/* Items being purchased with thumbnails */}
+                    <div
+                      style={{
+                        background: '#f8fafc',
+                        borderRadius: '10px',
+                        border: '1px solid #e2e8f0',
+                        padding: '14px',
+                        marginBottom: '20px',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        📦 Items in this Order ({items.reduce((s, i) => s + i.quantity, 0)}):
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {items.map((item) => (
+                          <div key={item.product.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div
+                              style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: '6px',
+                                overflow: 'hidden',
+                                flexShrink: 0,
+                                background: '#fff',
+                                border: '1px solid #cbd5e1',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {item.product.images?.[0] ? (
+                                <img
+                                  src={item.product.images[0]}
+                                  alt={item.product.name}
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                              ) : (
+                                <span style={{ fontSize: '1.2rem' }}>🐇</span>
+                              )}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0, fontSize: '0.82rem' }}>
+                              <div style={{ fontWeight: 600, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {item.product.name}
+                              </div>
+                              <div style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                                Qty: {item.quantity} · {formatNaira(item.product.price * item.quantity)}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                     <div
                       style={{
                         background: '#f8fafc',
@@ -1127,6 +1354,62 @@ export default function CheckoutPage() {
                 <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '24px' }}>
                   Your order tracking code is: <strong>{confirmedOrder.orderNumber}</strong>
                 </p>
+
+                {/* Purchased Items Manifest */}
+                {confirmedOrder.items && confirmedOrder.items.length > 0 && (
+                  <div
+                    style={{
+                      background: '#f8fafc',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'left',
+                      marginBottom: '16px',
+                      border: '1px solid #e2e8f0',
+                    }}
+                  >
+                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      📦 Items in this Order:
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {confirmedOrder.items.map((item, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div
+                            style={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: '6px',
+                              overflow: 'hidden',
+                              flexShrink: 0,
+                              background: '#fff',
+                              border: '1px solid #cbd5e1',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <span style={{ fontSize: '1.2rem' }}>🐇</span>
+                            )}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0, fontSize: '0.82rem' }}>
+                            <div style={{ fontWeight: 600, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {item.name}
+                            </div>
+                            <div style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                              Qty: {item.quantity} · {formatNaira(item.price * item.quantity)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div
                   style={{

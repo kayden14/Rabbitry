@@ -625,6 +625,11 @@ export default function HomePage() {
               grid-template-columns: repeat(2, 1fr) !important;
             }
           }
+          @media (max-width: 600px) {
+            .catering-text-pad {
+              padding: 2rem 1.25rem !important;
+            }
+          }
         `}</style>
       </section>
 
@@ -1007,7 +1012,7 @@ export default function HomePage() {
               borderRadius: '16px',
               overflow: 'hidden',
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
               alignItems: 'center',
             }}
           >
@@ -1134,7 +1139,7 @@ export default function HomePage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 270px), 1fr))',
               gap: '1.5rem',
             }}
           >

@@ -174,7 +174,7 @@ function ShopContent() {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
               {filtered.map((product, i) => (
                 <ProductCard key={product.id} product={product} delay={Math.min(i * 0.05, 0.3)} />
               ))}

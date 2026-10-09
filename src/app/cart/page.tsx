@@ -78,23 +78,70 @@ export default function CartPage() {
           </div>
         </div>
 
-        <div className="container" style={{ padding: '3rem 1.25rem' }}>
-          <div className="cart-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2.5rem', alignItems: 'start' }}>
+        <style>{`
+          .cart-container {
+            padding: 3rem 1.25rem;
+          }
+          .cart-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 380px;
+            gap: 2.5rem;
+            align-items: start;
+          }
+          .cart-summary-col {
+            position: sticky;
+            top: 100px;
+          }
+          .cart-item-row {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            display: flex;
+            gap: 1.25rem;
+            align-items: center;
+            box-shadow: var(--shadow);
+          }
+          @media (max-width: 900px) {
+            .cart-layout {
+              grid-template-columns: 1fr;
+              gap: 2rem;
+            }
+            .cart-summary-col {
+              position: static;
+            }
+          }
+          @media (max-width: 560px) {
+            .cart-container {
+              padding: 1.5rem 1rem;
+            }
+            .cart-item-row {
+              padding: 1rem;
+              gap: 0.875rem;
+              flex-wrap: wrap;
+            }
+            .cart-item-price {
+              width: 100%;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-top: 1px solid var(--gray-100);
+              padding-top: 0.65rem;
+              margin-top: 0.25rem;
+              text-align: left !important;
+            }
+            .cart-item-price > div {
+              margin-bottom: 0 !important;
+            }
+          }
+        `}</style>
+        <div className="container cart-container">
+          <div className="cart-layout">
             {/* Cart Items */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0 }}>
               {items.map(item => (
                 <div
                   key={item.product.id}
                   className="cart-item-row"
-                  style={{
-                    background: '#fff',
-                    borderRadius: 'var(--radius-lg)',
-                    padding: '1.25rem',
-                    display: 'flex',
-                    gap: '1.25rem',
-                    alignItems: 'center',
-                    boxShadow: 'var(--shadow)',
-                  }}
                 >
                   {/* Emoji image */}
                   <div style={{
@@ -198,7 +245,7 @@ export default function CartPage() {
             </div>
 
             {/* Order Summary */}
-            <div style={{ position: 'sticky', top: 100 }}>
+            <div className="cart-summary-col">
               <div style={{
                 background: '#fff',
                 borderRadius: 'var(--radius-xl)',

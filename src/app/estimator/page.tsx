@@ -87,7 +87,7 @@ export default function EstimatorPage() {
 • Drinkers: ${stats.drinkersNeeded} Nipples (${formatNaira(stats.drinkersCost)})
 • Monthly Feed: ${stats.feedPerMonthKg}kg (${stats.feedBags25kg} x 25kg bags)
 • Total Equipment Outlay: ${formatNaira(stats.totalEquipmentOutlay)}
-Consult Danethicals Rabbitry: 07052335766`;
+Consult Danethicals Rabbitry: ${PHONE_1}`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -97,14 +97,107 @@ Consult Danethicals Rabbitry: 07052335766`;
     <>
       <Navbar />
       <main style={{ minHeight: '100vh', background: 'var(--brand-cream)', paddingBottom: '5rem' }}>
+        <style>{`
+          .est-hero {
+            background: linear-gradient(135deg, var(--brand-green-dark) 0%, var(--brand-green) 100%);
+            color: #fff;
+            padding: clamp(2.5rem, 5vw, 4rem) 1.25rem clamp(2.5rem, 4vw, 3.5rem);
+            text-align: center;
+            position: relative;
+          }
+          .est-container {
+            max-width: 1200px;
+            margin: -2.5rem auto 0;
+            position: relative;
+            z-index: 10;
+            padding-left: 1rem;
+            padding-right: 1rem;
+          }
+          .est-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+            gap: 2rem;
+            align-items: start;
+          }
+          .est-card {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(0,0,0,0.06);
+            padding: 2.25rem;
+            min-width: 0;
+          }
+          .est-split-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+          }
+          .est-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+          }
+          .est-btn-subrow {
+            display: flex;
+            gap: 0.75rem;
+          }
+          .est-banner {
+            background: linear-gradient(135deg, #1A5C2A 0%, #0d3815 100%);
+            color: #fff;
+            border-radius: var(--radius-xl);
+            padding: 1.75rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+          }
+          .est-banner-btns {
+            display: flex;
+            gap: 0.75rem;
+          }
+          @media (max-width: 900px) {
+            .est-container {
+              margin-top: 1rem;
+            }
+            .est-grid {
+              grid-template-columns: 1fr;
+              gap: 1.5rem;
+            }
+            .est-card {
+              padding: 1.5rem;
+            }
+          }
+          @media (max-width: 560px) {
+            .est-card {
+              padding: 1.15rem;
+            }
+            .est-split-2 {
+              grid-template-columns: 1fr;
+            }
+            .est-metrics-grid {
+              grid-template-columns: 1fr;
+            }
+            .est-btn-subrow {
+              flex-direction: column;
+            }
+            .est-banner {
+              padding: 1.25rem;
+              flex-direction: column;
+              align-items: stretch;
+            }
+            .est-banner-btns {
+              flex-direction: column;
+            }
+            .est-banner-btns a {
+              width: 100%;
+              justify-content: center;
+            }
+          }
+        `}</style>
         {/* Hero Section */}
-        <div style={{
-          background: 'linear-gradient(135deg, var(--brand-green-dark) 0%, var(--brand-green) 100%)',
-          color: '#fff',
-          padding: '4rem 1.5rem 3.5rem',
-          textAlign: 'center',
-          position: 'relative',
-        }}>
+        <div className="est-hero">
           <div className="container" style={{ maxWidth: 840 }}>
             <span style={{
               display: 'inline-block',
@@ -122,7 +215,7 @@ Consult Danethicals Rabbitry: 07052335766`;
               Interactive Farm Planner
             </span>
             <h1 style={{
-              fontSize: 'clamp(2rem, 4vw, 2.85rem)',
+              fontSize: 'clamp(1.75rem, 4vw, 2.85rem)',
               fontFamily: "'Playfair Display', serif",
               fontWeight: 800,
               lineHeight: 1.2,
@@ -131,7 +224,7 @@ Consult Danethicals Rabbitry: 07052335766`;
               Rabbit Farm & Equipment Sizing Estimator
             </h1>
             <p style={{
-              fontSize: 'clamp(1rem, 2vw, 1.15rem)',
+              fontSize: 'clamp(0.95rem, 2vw, 1.15rem)',
               color: 'rgba(255, 255, 255, 0.85)',
               maxWidth: 680,
               margin: '0 auto',
@@ -143,21 +236,10 @@ Consult Danethicals Rabbitry: 07052335766`;
         </div>
 
         {/* Content Section */}
-        <div className="container" style={{ maxWidth: 1200, marginTop: '-2.5rem', position: 'relative', zIndex: 10 }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: '2rem',
-            alignItems: 'start',
-          }}>
+        <div className="est-container">
+          <div className="est-grid">
             {/* Input Configuration Card */}
-            <div style={{
-              background: '#fff',
-              borderRadius: 'var(--radius-xl)',
-              boxShadow: 'var(--shadow-lg)',
-              border: '1px solid rgba(0,0,0,0.06)',
-              padding: '2.25rem',
-            }}>
+            <div className="est-card">
               <h2 style={{
                 fontSize: '1.35rem',
                 fontWeight: 700,
@@ -237,7 +319,7 @@ Consult Danethicals Rabbitry: 07052335766`;
                 <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: 'var(--gray-800)', marginBottom: '0.6rem' }}>
                   Primary Farming Objective
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="est-split-2">
                   <button
                     type="button"
                     onClick={() => setPurpose('commercial-meat')}
@@ -276,7 +358,7 @@ Consult Danethicals Rabbitry: 07052335766`;
                 <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: 'var(--gray-800)', marginBottom: '0.6rem' }}>
                   Cage Build Quality
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="est-split-2">
                   <button
                     type="button"
                     onClick={() => setCageTier('heavy-duty')}
@@ -338,15 +420,9 @@ Consult Danethicals Rabbitry: 07052335766`;
             </div>
 
             {/* Calculations & Results Card */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div style={{
-                background: '#fff',
-                borderRadius: 'var(--radius-xl)',
-                boxShadow: 'var(--shadow-lg)',
-                border: '1px solid rgba(0,0,0,0.06)',
-                padding: '2.25rem',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
+              <div className="est-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <h2 style={{
                     fontSize: '1.35rem',
                     fontWeight: 700,
@@ -368,12 +444,7 @@ Consult Danethicals Rabbitry: 07052335766`;
                 </div>
 
                 {/* Key Metric Highlights */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '1rem',
-                  marginBottom: '1.75rem',
-                }}>
+                <div className="est-metrics-grid">
                   <div style={{
                     background: 'rgba(26,92,42,0.05)',
                     border: '1px solid rgba(26,92,42,0.15)',
@@ -383,7 +454,7 @@ Consult Danethicals Rabbitry: 07052335766`;
                     <span style={{ fontSize: '0.8rem', color: 'var(--gray-600)', display: 'block', marginBottom: '0.25rem' }}>
                       Cage Units Needed (4-Hole)
                     </span>
-                    <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--brand-green)' }}>
+                    <span style={{ fontSize: 'clamp(1.4rem, 4vw, 1.8rem)', fontWeight: 800, color: 'var(--brand-green)', wordBreak: 'break-word' }}>
                       {stats.cagesNeeded} <span style={{ fontSize: '1rem', fontWeight: 500 }}>units</span>
                     </span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--gray-500)', display: 'block', marginTop: '0.25rem' }}>
@@ -400,7 +471,7 @@ Consult Danethicals Rabbitry: 07052335766`;
                     <span style={{ fontSize: '0.8rem', color: 'var(--gray-600)', display: 'block', marginBottom: '0.25rem' }}>
                       Estimated Equipment Cost
                     </span>
-                    <span style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--brand-gold-dark)' }}>
+                    <span style={{ fontSize: 'clamp(1.3rem, 3.5vw, 1.6rem)', fontWeight: 800, color: 'var(--brand-gold-dark)', wordBreak: 'break-word' }}>
                       {formatNaira(stats.totalEquipmentOutlay)}
                     </span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--gray-500)', display: 'block', marginTop: '0.25rem' }}>
@@ -410,19 +481,19 @@ Consult Danethicals Rabbitry: 07052335766`;
                 </div>
 
                 {/* Detailed Table */}
-                <div style={{ border: '1px solid var(--gray-200)', borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: '1.5rem' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                <div style={{ border: '1px solid var(--gray-200)', borderRadius: 'var(--radius)', overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: '1.5rem' }}>
+                  <table style={{ width: '100%', minWidth: 320, borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                     <tbody>
                       <tr style={{ borderBottom: '1px solid var(--gray-200)', background: 'var(--brand-cream)' }}>
                         <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'var(--gray-700)' }}>Fabricated Wire Cages</td>
-                        <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 700, color: 'var(--gray-900)' }}>
+                        <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 700, color: 'var(--gray-900)', whiteSpace: 'nowrap' }}>
                           {stats.cagesNeeded} x {formatNaira(stats.cageUnitCost)} = {formatNaira(stats.cagesTotalCost)}
                         </td>
                       </tr>
                       {includeDrinkers && (
                         <tr style={{ borderBottom: '1px solid var(--gray-200)' }}>
                           <td style={{ padding: '0.75rem 1rem', color: 'var(--gray-600)' }}>Automatic Drinker Nipples</td>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600 }}>
+                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap' }}>
                             {stats.drinkersNeeded} units ({formatNaira(stats.drinkersCost)})
                           </td>
                         </tr>
@@ -430,7 +501,7 @@ Consult Danethicals Rabbitry: 07052335766`;
                       {includeFeeders && (
                         <tr style={{ borderBottom: '1px solid var(--gray-200)' }}>
                           <td style={{ padding: '0.75rem 1rem', color: 'var(--gray-600)' }}>Galvanized J-Feeders</td>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600 }}>
+                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap' }}>
                             {stats.drinkersNeeded} units ({formatNaira(stats.feedersCost)})
                           </td>
                         </tr>
@@ -444,7 +515,7 @@ Consult Danethicals Rabbitry: 07052335766`;
                       <tr style={{ borderBottom: '1px solid var(--gray-200)' }}>
                         <td style={{ padding: '0.75rem 1rem', color: 'var(--gray-600)' }}>30-Day Feed Allocation</td>
                         <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600 }}>
-                          {stats.feedPerMonthKg} kg ({stats.feedBags25kg} bags of 25kg)
+                          {stats.feedPerMonthKg} kg ({stats.feedBags25kg} bags)
                         </td>
                       </tr>
                       <tr style={{ background: 'rgba(26,92,42,0.03)' }}>
@@ -469,7 +540,7 @@ Consult Danethicals Rabbitry: 07052335766`;
                     💬 Send Estimate to RABBITRY WhatsApp
                   </a>
 
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <div className="est-btn-subrow">
                     <button
                       type="button"
                       onClick={handleAddEquipmentToCart}
@@ -491,17 +562,7 @@ Consult Danethicals Rabbitry: 07052335766`;
               </div>
 
               {/* Consultation / Advisory Banner */}
-              <div style={{
-                background: 'linear-gradient(135deg, #1A5C2A 0%, #0d3815 100%)',
-                color: '#fff',
-                borderRadius: 'var(--radius-xl)',
-                padding: '1.75rem 2rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '1.25rem',
-              }}>
+              <div className="est-banner">
                 <div>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.35rem' }}>
                     Need Custom Farm House Architecture?
@@ -510,7 +571,7 @@ Consult Danethicals Rabbitry: 07052335766`;
                     Danethicals provides on-site rabbitry installation, ventilation advice, and breeding stock supply anywhere in Osun, Oyo, Ogun, and Lagos States.
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div className="est-banner-btns">
                   <a
                     href={`tel:${PHONE_1}`}
                     className="btn btn-gold"
