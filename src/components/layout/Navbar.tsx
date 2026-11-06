@@ -39,8 +39,13 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className={styles.logo}>
           <span className={styles.logoIcon}>🐇</span>
-          <span className={styles.logoText}>
-            RABBIT<span className={styles.logoAccent}>RY</span>
+          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <span className={styles.logoText}>
+              RABBIT<span className={styles.logoAccent}>RY</span>
+            </span>
+            <span style={{ fontSize: '0.5rem', color: '#64748b', fontWeight: 500, letterSpacing: '0.04em', lineHeight: 1, marginTop: '-2px' }}>
+              Danethicals Limited
+            </span>
           </span>
         </Link>
 
