@@ -2,20 +2,58 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+type OrderBody = {
+  id?: string;
+  name?: string;
+  phone?: string;
+  email?: string | null;
+  state?: string;
+  city?: string;
+  address?: string;
+  items?: Array<Record<string, unknown>>;
+  subtotal?: number;
+  paymentMethod?: string;
+  paymentProofUrl?: string | null;
+  paystackReference?: string | null;
+  notes?: string | null;
+};
+
+type OrderRecord = {
+  id: string;
+  orderNumber: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string | null;
+  deliveryState?: string;
+  deliveryCity?: string;
+  deliveryAddress?: string;
+  items: Array<Record<string, unknown>>;
+  subtotal: number;
+  deliveryFee: null;
+  total: null;
+  paymentMethod: string;
+  paymentProofUrl: string | null;
+  paystackReference: string | null;
+  status: string;
+  adminNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 const IS_VERCEL = !!process.env.VERCEL;
 const DATA_DIR = IS_VERCEL ? '/tmp/rabbitry-data' : path.join(process.cwd(), 'data');
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 
 // In-memory fallback in case of read-only/lambda restarts
-let inMemoryOrders: any[] = [];
+let inMemoryOrders: OrderRecord[] = [];
 
-function readOrders(): any[] {
+function readOrders(): OrderRecord[] {
   try {
     if (fs.existsSync(ORDERS_FILE)) {
-      const data = JSON.parse(fs.readFileSync(ORDERS_FILE, 'utf-8'));
+      const data = JSON.parse(fs.readFileSync(ORDERS_FILE, 'utf-8')) as unknown;
       if (Array.isArray(data)) {
-        inMemoryOrders = data;
-        return data;
+        inMemoryOrders = data as OrderRecord[];
+        return inMemoryOrders;
       }
     }
   } catch {
@@ -24,7 +62,7 @@ function readOrders(): any[] {
   return inMemoryOrders;
 }
 
-function writeOrders(orders: any[]) {
+function writeOrders(orders: OrderRecord[]) {
   inMemoryOrders = orders;
   try {
     if (!fs.existsSync(DATA_DIR)) {
@@ -49,10 +87,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = (await req.json()) as Partial<OrderBody>;
     const orders = readOrders();
 
-    const newOrder = {
+    const newOrder: OrderRecord = {
       id: `order-${Date.now()}`,
       orderNumber: generateOrderNumber(),
       customerName: body.name,
@@ -61,10 +99,10 @@ export async function POST(req: NextRequest) {
       deliveryState: body.state,
       deliveryCity: body.city,
       deliveryAddress: body.address,
-      items: body.items || [],
+      items: (body.items as Array<Record<string, unknown>>) || [],
       subtotal: body.subtotal || 0,
-      deliveryFee: null, // Set by admin
-      total: null,       // Set by admin
+      deliveryFee: null,
+      total: null,
       paymentMethod: body.paymentMethod || 'bank-transfer',
       paymentProofUrl: body.paymentProofUrl || null,
       paystackReference: body.paystackReference || null,
@@ -85,10 +123,10 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = (await req.json()) as Partial<OrderBody>;
     const orders = readOrders();
 
-    const idx = orders.findIndex((o: { id: string }) => o.id === body.id);
+    const idx = orders.findIndex((o) => o.id === body.id);
     if (idx === -1) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }

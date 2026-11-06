@@ -2,19 +2,37 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+type LeadInput = {
+  name?: string;
+  phone?: string;
+  email?: string | null;
+  source?: string;
+  inquiryDetails?: string | null;
+};
+
+type LeadRecord = {
+  id: string;
+  name?: string;
+  phone?: string;
+  email?: string | null;
+  source: string;
+  inquiryDetails?: string | null;
+  createdAt: string;
+};
+
 const IS_VERCEL = !!process.env.VERCEL;
 const DATA_DIR = IS_VERCEL ? '/tmp/rabbitry-data' : path.join(process.cwd(), 'data');
 const LEADS_FILE = path.join(DATA_DIR, 'leads.json');
 
-let inMemoryLeads: any[] = [];
+let inMemoryLeads: LeadRecord[] = [];
 
-function readLeads(): any[] {
+function readLeads(): LeadRecord[] {
   try {
     if (fs.existsSync(LEADS_FILE)) {
-      const data = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf-8'));
+      const data = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf-8')) as unknown;
       if (Array.isArray(data)) {
-        inMemoryLeads = data;
-        return data;
+        inMemoryLeads = data as LeadRecord[];
+        return inMemoryLeads;
       }
     }
   } catch {
@@ -23,7 +41,7 @@ function readLeads(): any[] {
   return inMemoryLeads;
 }
 
-function writeLeads(leads: any[]) {
+function writeLeads(leads: LeadRecord[]) {
   inMemoryLeads = leads;
   try {
     if (!fs.existsSync(DATA_DIR)) {
@@ -42,10 +60,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = (await req.json()) as Partial<LeadInput>;
     const leads = readLeads();
 
-    const newLead = {
+    const newLead: LeadRecord = {
       id: `lead-${Date.now()}`,
       name: body.name,
       phone: body.phone,

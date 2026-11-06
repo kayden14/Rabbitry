@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -10,13 +10,8 @@ import { NIGERIAN_STATES as STATES } from '@/types';
 
 export default function CartPage() {
   const { items, deliveryState, deliveryCity, updateQuantity, removeItem, getSubtotal, getTotalItems, getWhatsAppMessage, setDeliveryLocation } = useCartStore();
-  const [mounted, setMounted] = useState(false);
   const [localState, setLocalState] = useState(deliveryState);
   const [localCity, setLocalCity] = useState(deliveryCity);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleLocationUpdate = () => {
     setDeliveryLocation(localState, localCity);
@@ -24,21 +19,6 @@ export default function CartPage() {
 
   const subtotal = getSubtotal();
   const waMessage = getWhatsAppMessage();
-
-  if (!mounted) {
-    return (
-      <>
-        <Navbar />
-        <main>
-          <div className="container" style={{ padding: '8rem 1.25rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🐇</div>
-            <p style={{ color: 'var(--gray-500)' }}>Loading your cart...</p>
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
-  }
 
   if (items.length === 0) {
     return (

@@ -1179,6 +1179,112 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── TRAINING / INTERNSHIP / INDUSTRIAL EXPERIENCE ────────── */}
+      <section style={{ padding: '4.5rem 0', background: '#ffffff', borderTop: '1px solid #e2e8f0' }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 3rem' }}>
+            <span
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: '#082e11',
+                background: '#e2f4e8',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                display: 'inline-block',
+                marginBottom: '10px',
+              }}
+            >
+              Hands-On Farm Experience
+            </span>
+            <h2
+              style={{
+                fontSize: 'clamp(1.75rem, 3.5vw, 2.4rem)',
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontWeight: 800,
+                color: '#0f172a',
+                lineHeight: 1.25,
+                marginBottom: '12px',
+              }}
+            >
+              Training / Internship / Industrial Experience
+            </h2>
+            <p style={{ fontSize: '0.95rem', color: '#64748b', lineHeight: 1.6 }}>
+              We welcome students, aspiring farmers, and agricultural institutions for practical hands-on
+              training and industrial experience at our commercial rabbitry facility.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+              gap: '1.5rem',
+            }}
+          >
+            <div
+              style={{
+                borderRadius: '12px',
+                overflow: 'hidden',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+              }}
+            >
+              <img
+                src="/images/training-visit-1.jpg"
+                alt="Students arriving at Danethicals Rabbitry for industrial training"
+                style={{ width: '100%', height: '260px', objectFit: 'cover' }}
+              />
+            </div>
+
+            <div
+              style={{
+                borderRadius: '12px',
+                overflow: 'hidden',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+              }}
+            >
+              <img
+                src="/images/training-visit-2.jpg"
+                alt="Student group at Rabbitry entrance during farm visit"
+                style={{ width: '100%', height: '260px', objectFit: 'cover' }}
+              />
+            </div>
+
+            <div
+              style={{
+                borderRadius: '12px',
+                overflow: 'hidden',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+              }}
+            >
+              <img
+                src="/images/training-visit-3.jpg"
+                alt="Students holding rabbits during hands-on training at Danethicals Rabbitry"
+                style={{ width: '100%', height: '260px', objectFit: 'cover' }}
+              />
+              <p
+                style={{
+                  textAlign: 'center',
+                  fontSize: '0.75rem',
+                  color: '#64748b',
+                  fontWeight: 600,
+                  padding: '8px 0',
+                  margin: 0,
+                  background: '#ffffff',
+                }}
+              >
+                Danethicals Limited
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── CORPORATE CONTACT & LOCATION STRIP ───────────────────── */}
       <section style={{ background: '#082e11', color: '#ffffff', padding: '3.5rem 0' }}>
         <div className="container">
